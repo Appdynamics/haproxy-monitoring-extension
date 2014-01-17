@@ -64,16 +64,16 @@ In the AppDynamics Metric Browser, look for: Application Infrastructure Performa
 |qcur				| current queued requests|
 |scur				| current sessions|
 |stot				| total sessions|
-|bin				| Bytes In	|
+|bin			         	| Bytes In	|
 |bout				| Bytes Out|
 |ereq				| error requests|
 |eresp				| response errors|
 |econ				| connection errors|
-|act				| server is active (server), number of active servers (backend)|
-|bck				| server is backup (server), number of backup servers (backend)|
+|act			     	| server is active (server), number of active servers (backend)|
+|bck			     	| server is backup (server), number of backup servers (backend)|
 
 ## Custom Dashboard
-![]()
+![](https://github.com/Appdynamics/haproxy-monitoring-extension/raw/master/HAProxyCustomDashboard.png)
 
 ##Contributing
 
