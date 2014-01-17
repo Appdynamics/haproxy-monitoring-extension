@@ -16,7 +16,7 @@
                        <argument name="url" is-required="true" default-value="http://demo.1wt.eu/;csv" />
                        <argument name="username" is-required="false" default-value="" />
                        <argument name="password" is-required="false" default-value="" />
-                    <!--proxy names you wish to monitor as a comma separated values --> 
+                    <!--proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored --> 
                        <argument name="proxynames" is-required="false" default-value="" />
                 </task-arguments>
                 <java-task>
