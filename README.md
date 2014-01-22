@@ -7,6 +7,7 @@ This extension works only with the standalone machine agent.
 HAProxy is an open source, high performance TCP/HTTP Load Balancer commonly used to improve the performance of web sites and services by spreading requests across multiple servers. 
 The HAProxy Monitoring extension collects key metrics from HAProxy Load balancer of the underlying proxies/servers and presents them to the AppDynamics Metric Browser. 
 
+Notes: Works with HAProxy v 1.3 and above.
 
 ##Installation
 
