@@ -79,6 +79,7 @@ public class HAProxyMonitor extends AManagedMonitor {
 		dictionary.put("status", 17);
 		dictionary.put("act", 19);
 		dictionary.put("bck", 20);
+		dictionary.put("lbtot", 30);
 	}
 
 	/*
@@ -123,6 +124,7 @@ public class HAProxyMonitor extends AManagedMonitor {
 				printMetric(proxy, proxyTypes, "eresp", "response errors");
 				printMetric(proxy, proxyTypes, "act", "active servers");
 				printMetric(proxy, proxyTypes, "bck", "backup servers");
+				printMetric(proxy, proxyTypes, "lbtot", "lbtot");
 			}
 
 			return new TaskOutput("ActiveMQ Metric Upload Complete");
@@ -153,7 +155,7 @@ public class HAProxyMonitor extends AManagedMonitor {
 			if (url != null && url != "") {
 				responseString = getResponseString(url, host, userName, password);
 			}
-			logger.error("Connected to " + url);
+			logger.info("Connected to " + url);
 		} catch (MalformedURLException e) {
 			logger.error("URL null or empty in monitor.xml");
 			throw new RuntimeException("URL null or empty in monitor.xml");
