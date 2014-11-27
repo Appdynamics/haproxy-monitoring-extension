@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.appdynamics.monitors.haproxy;
+package com.appdynamics.extensions.haproxy;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -53,7 +53,7 @@ import com.singularity.ee.util.log4j.Log4JLogger;
 
 public class HAProxyMonitor extends AManagedMonitor {
 
-	private static Logger logger = Logger.getLogger(HAProxyMonitor.class.getName());
+	private static Logger logger = Logger.getLogger(HAProxyMonitor.class);
 	private static final String metricPathPrefix = "Custom Metrics|HAProxy|";
 
 	private WritableWorkbook workbook;
@@ -63,8 +63,13 @@ public class HAProxyMonitor extends AManagedMonitor {
 	private String responseString;
 
 	private List<String> proxiesListedInConfigFile = new ArrayList<String>();
-
+	
 	public HAProxyMonitor() {
+		
+		String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
+		logger.info(msg);
+		System.out.println(msg);
+		
 		dictionary = new HashMap<String, Integer>();
 		dictionary.put("# pxname", 0);
 		dictionary.put("svname", 1);
@@ -127,10 +132,10 @@ public class HAProxyMonitor extends AManagedMonitor {
 				printMetric(proxy, proxyTypes, "lbtot", "lbtot");
 			}
 
-			return new TaskOutput("ActiveMQ Metric Upload Complete");
+			return new TaskOutput("HAProxy Metric Upload Complete");
 		} catch (Exception e) {
-			logger.error("ActiveMQ Metric upload failed");
-			return new TaskOutput("ActiveMQ Metric upload failed");
+			logger.error("HAProxy Metric upload failed");
+			return new TaskOutput("HAProxy Metric upload failed");
 		}
 	}
 
@@ -295,6 +300,10 @@ public class HAProxyMonitor extends AManagedMonitor {
 	private String getCellContents(int column, int row) {
 		String contents = getSheet().getCell(column, row).getContents();
 		return contents;
+	}
+	
+	private static String getImplementationVersion() {
+		return HAProxyMonitor.class.getPackage().getImplementationTitle();
 	}
 
 	public static void main(String[] args) throws Exception {

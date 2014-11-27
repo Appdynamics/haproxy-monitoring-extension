@@ -20,8 +20,8 @@
                        <argument name="proxynames" is-required="false" default-value="" />
                 </task-arguments>
                 <java-task>
-                    <classpath>HAProxyMonitor.jar;lib/jxl.jar</classpath>
-                        <impl-class>com.appdynamics.monitors.haproxy.HAProxyMonitor</impl-class>
+                    <classpath>haproxy-monitoring-extension.jar</classpath>
+                        <impl-class>com.appdynamics.extensions.haproxy.HAProxyMonitor</impl-class>
                 </java-task>
         </monitor-run-task>
 </monitor>

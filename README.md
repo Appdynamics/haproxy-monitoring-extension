@@ -11,10 +11,9 @@ Notes: Works with HAProxy v 1.3 and above.
 
 ##Installation
 
-1. Run 'ant package' from the haproxy-monitoring-extension directory
-2. Download the file HAProxyMonitor.zip located in the 'dist' directory into \<machineagent install dir\>/monitors/
-3. Unzip the downloaded file
-4. In \<machineagent install dir\>/monitors/HAProxyMonitor/, open monitor.xml and configure the HAProxy parameters.
+1. Run `mvn clean install` from the haproxy-monitoring-extension directory and find the HAProxyMonitor.zip in the "target" folder.
+2. Unzip as "HAProxyMonitor" and copy the "HAProxyMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
+4. In `<MACHINE_AGENT_HOME>/monitors/HAProxyMonitor/`, open monitor.xml and configure the HAProxy parameters.
      <pre>
      URI of the haproxy CSV stats. See the 'CSV Export' link on your haproxy stats page
      &lt;argument name="url" is-required="true" default-value="http://demo.1wt.eu/;csv" /&gt;
@@ -27,35 +26,6 @@ Notes: Works with HAProxy v 1.3 and above.
  
 In the AppDynamics Metric Browser, look for: Application Infrastructure Performance  | \<Tier\> | Custom Metrics | HAProxy
 
-##Directory Structure
-
-<table><tbody>
-<tr>
-<th align="left"> File/Folder </th>
-<th align="left"> Description </th>
-</tr>
-<tr>
-<td class='confluenceTd'> conf </td>
-<td class='confluenceTd'> Contains the monitor.xml </td>
-</tr>
-<tr>
-<td class='confluenceTd'> lib </td>
-<td class='confluenceTd'> Contains third-party project references </td>
-</tr>
-<tr>
-<td class='confluenceTd'> src </td>
-<td class='confluenceTd'> Contains source code to the HAProxy Monitoring Extension </td>
-</tr>
-<tr>
-<td class='confluenceTd'> dist </td>
-<td class='confluenceTd'> Only obtained when using ant. Run 'ant build' to get binaries. Run 'ant package' to get the distributable .zip file </td>
-</tr>
-<tr>
-<td class='confluenceTd'> build.xml </td>
-<td class='confluenceTd'> Ant build script to package the project (required only if changing Java code) </td>
-</tr>
-</tbody>
-</table>
 
 ## Metrics
 
@@ -82,10 +52,10 @@ Always feel free to fork and contribute any changes directly here on GitHub.
 
 ##Community
 
-Find out more in the [AppSphere]() community.
+Find out more in the [AppSphere](http://community.appdynamics.com/t5/eXchange-Community-AppDynamics/HA-Proxy-Monitoring-Extension/idi-p/6143) community.
 
 ##Support
 
-For any questions or feature request, please contact [AppDynamics Center of Excellence](mailto:ace-request@appdynamics.com).
+For any questions or feature request, please contact [AppDynamics Support](mailto:help@appdynamics.com).
 
 
