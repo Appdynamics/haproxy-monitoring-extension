@@ -15,17 +15,30 @@ Notes: Works with HAProxy v 1.3 and above.
 2. Unzip as "HAProxyMonitor" and copy the "HAProxyMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
 4. In `<MACHINE_AGENT_HOME>/monitors/HAProxyMonitor/`, open monitor.xml and configure the HAProxy parameters.
      <pre>
+	 &lt;argument name="host" is-required="true" default-value="demo.1wt.eu" /&gt;
+     &lt;argument name="port" is-required="true" default-value="80" /&gt;
+                       
      URI of the haproxy CSV stats. See the 'CSV Export' link on your haproxy stats page
-     &lt;argument name="url" is-required="true" default-value="http://demo.1wt.eu/;csv" /&gt;
+     &lt;argument name="csv-export-uri" is-required="true" default-value=";csv" /&gt;
      &lt;argument name="username" is-required="false" default-value="" /&gt;
      &lt;argument name="password" is-required="false" default-value="" /&gt;
-     proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored.
+     proxy names you wish to monitor as a comma separated values. If empty, all the proxies are monitored.
      &lt;argument name="proxynames" is-required="false" default-value="" /&gt;
+     &lt;argument name="metric-prefix" is-required="false" default-value="Custom Metrics|HAProxy|" /&gt;
      </pre>
 5. Restart the Machine Agent. 
  
 In the AppDynamics Metric Browser, look for: Application Infrastructure Performance  | \<Tier\> | Custom Metrics | HAProxy
 
+##Password Encryption Support
+
+To avoid setting the clear text password in the monitor.xml. Please follow the process to encrypt the password and set the encrypted password and the key in the monitor.xml
+1. Download the util jar to encrypt the password from https://github.com/Appdynamics/maven-repo/raw/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar 
+2. Encrypt password from the commandline 
+java -cp "appd-exts-commons-1.1.2.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword 
+3. Add the properties in the monitor.xml. Substitute the default-value 
+<argument name="password-encrypted" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/> 
+<argument name="encryption-key" is-required="false" default-value="myKey"/>
 
 ## Metrics
 

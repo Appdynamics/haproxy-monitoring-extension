@@ -20,9 +20,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,37 +36,38 @@ import jxl.write.WritableWorkbook;
 
 import org.apache.log4j.Logger;
 
+import com.appdynamics.TaskInputArgs;
+import com.appdynamics.extensions.ArgumentsValidator;
+import com.appdynamics.extensions.crypto.CryptoUtil;
+import com.appdynamics.extensions.http.SimpleHttpClient;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
-import com.singularity.ee.util.httpclient.HttpClientWrapper;
-import com.singularity.ee.util.httpclient.HttpExecutionRequest;
-import com.singularity.ee.util.httpclient.HttpExecutionResponse;
-import com.singularity.ee.util.httpclient.HttpOperation;
-import com.singularity.ee.util.httpclient.IHttpClientWrapper;
-import com.singularity.ee.util.log4j.Log4JLogger;
 
 public class HAProxyMonitor extends AManagedMonitor {
 
+	private static final String CSV_EXPORT_URI = "csv-export-uri";
+	private static final String METRIC_SEPARATOR = "|";
 	private static Logger logger = Logger.getLogger(HAProxyMonitor.class);
-	private static final String metricPathPrefix = "Custom Metrics|HAProxy|";
-
+	private static String metricPrefix;
 	private WritableWorkbook workbook;
-
 	private Map<String, Integer> dictionary;
 
-	private String responseString;
+	private static final Map<String, String> DEFAULT_ARGS = new HashMap<String, String>() {
+		{
+			put(TaskInputArgs.METRIC_PREFIX, "Custom Metrics|HAProxy");
+		}
+	};
 
-	private List<String> proxiesListedInConfigFile = new ArrayList<String>();
-	
 	public HAProxyMonitor() {
-		
 		String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
 		logger.info(msg);
 		System.out.println(msg);
-		
+
 		dictionary = new HashMap<String, Integer>();
 		dictionary.put("# pxname", 0);
 		dictionary.put("svname", 1);
@@ -95,99 +93,72 @@ public class HAProxyMonitor extends AManagedMonitor {
 	 * com.singularity.ee.agent.systemagent.api.TaskExecutionContext)
 	 */
 	public TaskOutput execute(Map<String, String> taskArguments, TaskExecutionContext arg1) throws TaskExecutionException {
-		try {
-			// connect to url with the arguments provided and get response string
-			connect(taskArguments);
-			// reads the csv output and writes the response to a spreadsheet
-			// which is used inturn to get the metrics
-			writeResponseToWorkbook(responseString);
-
-			Map<Integer, String> proxiesToBeMonitored = getAllProxyAndTypes(dictionary.get("# pxname"));
-			Map<Integer, String> proxyTypes = getAllProxyAndTypes(dictionary.get("svname"));
-
-			if (proxiesListedInConfigFile.size() != 0) {
-				for (Iterator<Map.Entry<Integer, String>> it = proxiesToBeMonitored.entrySet().iterator(); it.hasNext();) {
-					Map.Entry<Integer, String> entry = it.next();
-					if (!proxiesListedInConfigFile.contains(entry.getValue())) {
-						it.remove();
-					}
+		if (taskArguments != null) {
+			logger.info("Starting the HAProxy Monitoring Task");
+			try {
+				taskArguments = ArgumentsValidator.validateArguments(taskArguments, DEFAULT_ARGS);
+				String password = CryptoUtil.getPassword(taskArguments);
+				if (Strings.isNullOrEmpty(password)) {
+					taskArguments.put("password", password);
 				}
-			}
-			// Prints metrics to Controller Metric Browser
-			for (Map.Entry<Integer, String> proxy : proxiesToBeMonitored.entrySet()) {
-				printMetric(getMetricPrefix() + proxy.getValue() + "|" + proxyTypes.get(proxy.getKey()) + "|", "status", getStatus(proxy.getKey()),
-						MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE, MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE,
-						MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+				SimpleHttpClient httpClient = SimpleHttpClient.builder(taskArguments).build();
 
-				printMetric(proxy, proxyTypes, "qcur", "queued_requests");
-				printMetric(proxy, proxyTypes, "scur", "current sessions");
-				printMetric(proxy, proxyTypes, "stot", "total sessions");
-				printMetric(proxy, proxyTypes, "bin", "bytes in");
-				printMetric(proxy, proxyTypes, "bout", "bytes out");
-				printMetric(proxy, proxyTypes, "ereq", "error requests");
-				printMetric(proxy, proxyTypes, "econ", "connection errors");
-				printMetric(proxy, proxyTypes, "eresp", "response errors");
-				printMetric(proxy, proxyTypes, "act", "active servers");
-				printMetric(proxy, proxyTypes, "bck", "backup servers");
-				printMetric(proxy, proxyTypes, "lbtot", "lbtot");
-			}
+				String csvPath = taskArguments.get(CSV_EXPORT_URI);
+				String responseString = httpClient.target().path(csvPath).get().string();
 
-			return new TaskOutput("HAProxy Metric Upload Complete");
-		} catch (Exception e) {
-			logger.error("HAProxy Metric upload failed");
-			return new TaskOutput("HAProxy Metric upload failed");
+				// reads the csv output and writes the response to a spreadsheet
+				// which is used inturn to get the metrics
+				writeResponseToWorkbook(responseString);
+
+				Map<Integer, String> allProxies = getAllProxyAndTypes(dictionary.get("# pxname"));
+				Map<Integer, String> proxyTypes = getAllProxyAndTypes(dictionary.get("svname"));
+
+				Map<Integer, String> proxiesToBeMonitored = filterProxies(taskArguments, allProxies);
+				printStats(taskArguments, proxiesToBeMonitored, proxyTypes);
+
+				logger.info("HAProxy Monitoring Task completed successfully");
+				return new TaskOutput("HAProxy Monitoring Task completed successfully");
+			} catch (Exception e) {
+				logger.error("HAProxy Metrics collection failed", e);
+			}
 		}
+		throw new TaskExecutionException("HAProxy Monitor task completed with failures");
 	}
 
-	/**
-	 * Validates the task arguments passed and connects to HAProxy CSV page.
-	 * 
-	 * @param taskArguments
-	 */
-	private void connect(Map<String, String> taskArguments) {
-		if (!taskArguments.containsKey("url") || !taskArguments.containsKey("username") || !taskArguments.containsKey("password")) {
-			logger.error("Monitor.xml needs to contain all required task arguments");
-			throw new RuntimeException("Monitor.xml needs to contain all required task arguments");
-		}
-		String url = taskArguments.get("url");
-		URL aurl;
-		try {
-			aurl = new URL(url);
-			String host = aurl.getHost();
-			String userName = taskArguments.get("username");
-			String password = taskArguments.get("password");
-
-			if (url != null && url != "") {
-				responseString = getResponseString(url, host, userName, password);
-			}
-			logger.info("Connected to " + url);
-		} catch (MalformedURLException e) {
-			logger.error("URL null or empty in monitor.xml");
-			throw new RuntimeException("URL null or empty in monitor.xml");
-		}
-
-		if (taskArguments.containsKey("proxynames") && null != taskArguments.get("proxynames") && !taskArguments.get("proxynames").equals("")) {
+	private Map<Integer, String> filterProxies(Map<String, String> taskArguments, Map<Integer, String> allProxies) {
+		List<String> proxiesListedInConfigFile = Lists.newArrayList();
+		if (taskArguments.containsKey("proxynames") && !Strings.isNullOrEmpty(taskArguments.get("proxynames"))) {
 			proxiesListedInConfigFile = Arrays.asList(taskArguments.get("proxynames").split(","));
 		}
+		if (proxiesListedInConfigFile.size() != 0) {
+			for (Iterator<Map.Entry<Integer, String>> it = allProxies.entrySet().iterator(); it.hasNext();) {
+				Map.Entry<Integer, String> entry = it.next();
+				if (!proxiesListedInConfigFile.contains(entry.getValue())) {
+					it.remove();
+				}
+			}
+		}
+		return allProxies;
 	}
 
-	/**
-	 * Returns http response as a csv string
-	 * 
-	 * @param url
-	 * @param host
-	 * @param username
-	 * @param password
-	 * @return
-	 */
-	private String getResponseString(String url, String host, String username, String password) {
-		IHttpClientWrapper httpClient = HttpClientWrapper.getInstance();
-		HttpExecutionRequest request = new HttpExecutionRequest(url, "", HttpOperation.GET);
-		httpClient.authenticateHost(host, 80, "", username, password, true);
-		HttpExecutionResponse response = httpClient.executeHttpOperation(request, new Log4JLogger(logger));
+	private void printStats(Map<String, String> taskArguments, Map<Integer, String> proxiesToBeMonitored, Map<Integer, String> proxyTypes) {
+		// Prints metrics to Controller Metric Browser
+		metricPrefix = taskArguments.get(TaskInputArgs.METRIC_PREFIX) + METRIC_SEPARATOR;
+		for (Map.Entry<Integer, String> proxy : proxiesToBeMonitored.entrySet()) {
+			printMetric(proxy.getValue() + METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + METRIC_SEPARATOR, "status", getStatus(proxy.getKey()));
 
-		responseString = response.getResponseBody();
-		return responseString;
+			printMetric(proxy, proxyTypes, "qcur", "queued_requests");
+			printMetric(proxy, proxyTypes, "scur", "current sessions");
+			printMetric(proxy, proxyTypes, "stot", "total sessions");
+			printMetric(proxy, proxyTypes, "bin", "bytes in");
+			printMetric(proxy, proxyTypes, "bout", "bytes out");
+			printMetric(proxy, proxyTypes, "ereq", "error requests");
+			printMetric(proxy, proxyTypes, "econ", "connection errors");
+			printMetric(proxy, proxyTypes, "eresp", "response errors");
+			printMetric(proxy, proxyTypes, "act", "active servers");
+			printMetric(proxy, proxyTypes, "bck", "backup servers");
+			printMetric(proxy, proxyTypes, "lbtot", "lbtot");
+		}
 	}
 
 	/**
@@ -218,6 +189,7 @@ public class HAProxyMonitor extends AManagedMonitor {
 			}
 			workbook.write();
 			workbook.close();
+			outputStream.close();
 		} catch (Exception e) {
 			logger.error("Error while writing response to workbook stream");
 			throw new RuntimeException("Error while writing response to workbook stream");
@@ -250,19 +222,22 @@ public class HAProxyMonitor extends AManagedMonitor {
 	 */
 	private void printMetric(Entry<Integer, String> proxy, Map<Integer, String> proxyTypes, String metricKey, String metricName) {
 		if (!getCellContents(dictionary.get(metricKey), proxy.getKey()).equals("")) {
-			printMetric(getMetricPrefix() + proxy.getValue() + "|" + proxyTypes.get(proxy.getKey()) + "|", metricName,
-					getCellContents(dictionary.get(metricKey), proxy.getKey()), MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,
-					MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+			printMetric(proxy.getValue() + METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + METRIC_SEPARATOR, metricName,
+					getCellContents(dictionary.get(metricKey), proxy.getKey()));
 		}
 	}
 
-	private void printMetric(String metricPath, String metricName, Object metricValue, String aggregation, String timeRollup, String cluster) {
-		MetricWriter metricWriter = super.getMetricWriter(metricPath + metricName, aggregation, timeRollup, cluster);
-		metricWriter.printMetric(String.valueOf(metricValue));
+	private void printMetric(String metricPath, String metricName, Object metricValue) {
+		if (metricValue != null) {
+			MetricWriter metricWriter = super.getMetricWriter(getMetricPrefix() + metricPath + metricName,
+					MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE, MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE,
+					MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+			metricWriter.printMetric(String.valueOf(metricValue));
+		}
 	}
 
 	private String getMetricPrefix() {
-		return metricPathPrefix;
+		return metricPrefix;
 	}
 
 	/**
@@ -301,17 +276,8 @@ public class HAProxyMonitor extends AManagedMonitor {
 		String contents = getSheet().getCell(column, row).getContents();
 		return contents;
 	}
-	
+
 	private static String getImplementationVersion() {
 		return HAProxyMonitor.class.getPackage().getImplementationTitle();
-	}
-
-	public static void main(String[] args) throws Exception {
-
-		HAProxyMonitor monitor = new HAProxyMonitor();
-
-		String responseString = monitor.getResponseString("http://demo.1wt.eu/;csv", "demo.1wt.eu", "", "");
-
-		System.out.println(responseString);
 	}
 }

@@ -4,7 +4,7 @@
 
   <groupId>com.appdynamics.extensions</groupId>
   <artifactId>haproxy-monitoring-extension</artifactId>
-  <version>1.0.0</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
 
   <name>haproxy-monitoring-extension</name>
@@ -28,7 +28,7 @@
       <artifactId>appd-exts-commons</artifactId>
       <version>1.1.2</version>
     </dependency>
-      <dependency>
+    <dependency>
       <groupId>net.sourceforge.jexcelapi</groupId>
       <artifactId>jxl</artifactId>
       <version>2.6.12</version>
@@ -111,7 +111,6 @@
                                 <mkdir dir="${target.dir}"/>
                                 <copy todir="${target.dir}">
                                     <fileset dir="src/main/resources/conf" includes="monitor.xml"/>
-                                    <fileset dir="src/main/resources/conf" includes="config.yml"/>
                                 </copy>
                                 <copy todir="${target.dir}">
                                     <fileset dir="${project.build.directory}" includes="${project.artifactId}.${project.packaging}"/>
