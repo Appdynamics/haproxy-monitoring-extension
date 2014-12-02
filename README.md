@@ -37,9 +37,11 @@ To avoid setting the clear text password in the monitor.xml. Please follow the p
 1. Download the util jar to encrypt the password from https://github.com/Appdynamics/maven-repo/raw/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar 
 2. Encrypt password from the commandline 
 java -cp "appd-exts-commons-1.1.2.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword 
-3. Add the properties in the monitor.xml. Substitute the default-value 
-<argument name="password-encrypted" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/> 
-<argument name="encryption-key" is-required="false" default-value="myKey"/>
+3. Add the following properties in the monitor.xml substituting the default password argument.
+<pre>
+&lt;argument name="password-encrypted" is-required="true" default-value="<ENCRYPTED_PASSWORD>"/&gt;
+&lt;argument name="encryption-key" is-required="false" default-value="myKey"/&gt;
+</pre>
 
 ## Metrics
 
