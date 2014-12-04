@@ -191,7 +191,7 @@ public class HAProxyMonitor extends AManagedMonitor {
 			workbook.close();
 			outputStream.close();
 		} catch (Exception e) {
-			logger.error("Error while writing response to workbook stream");
+			logger.error("Error while writing response to workbook stream ", e);
 			throw new RuntimeException("Error while writing response to workbook stream");
 		}
 	}
