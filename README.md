@@ -14,18 +14,24 @@ Notes: Works with HAProxy v 1.3 and above.
 1. Run `mvn clean install` from the haproxy-monitoring-extension directory and find the HAProxyMonitor.zip in the "target" folder.
 2. Unzip as "HAProxyMonitor" and copy the "HAProxyMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
 4. In `<MACHINE_AGENT_HOME>/monitors/HAProxyMonitor/`, open monitor.xml and configure the HAProxy parameters.
-     <pre>
-	 &lt;argument name="host" is-required="true" default-value="demo.1wt.eu" /&gt;
-     &lt;argument name="port" is-required="true" default-value="80" /&gt;
-                       
-     URI of the haproxy CSV stats. See the 'CSV Export' link on your haproxy stats page
-     &lt;argument name="csv-export-uri" is-required="true" default-value=";csv" /&gt;
-     &lt;argument name="username" is-required="false" default-value="" /&gt;
-     &lt;argument name="password" is-required="false" default-value="" /&gt;
-     proxy names you wish to monitor as a comma separated values. If empty, all the proxies are monitored.
-     &lt;argument name="proxynames" is-required="false" default-value="" /&gt;
-     &lt;argument name="metric-prefix" is-required="false" default-value="Custom Metrics|HAProxy|" /&gt;
-     </pre>
+  ```
+  	<argument name="host" is-required="true" default-value="demo.1wt.eu"/>
+        <argument name="port" is-required="true" default-value="80"/>
+
+        <!--URI of the haproxy CSV stats url. See the 'CSV Export' link on your haproxy stats page -->
+        <argument name="csv-export-uri" is-required="true" default-value=";csv"/>
+
+        <argument name="username" is-required="false" default-value=""/>
+        <argument name="password" is-required="false" default-value=""/>
+
+        <!--proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored -->
+        <argument name="proxynames" is-required="false" default-value=""/>
+        <!--HA Proxy stats as a comma separated values to be excluded from monitoring -->
+        <argument name="excludeStats" is-required="false" default-value="pid,iid,sid"/>
+        <argument name="metric-prefix" is-required="false" default-value="Custom Metrics|HAProxy|"/>
+  ```
+     
+
 5. Restart the Machine Agent. 
  
 In the AppDynamics Metric Browser, look for: Application Infrastructure Performance  | \<Tier\> | Custom Metrics | HAProxy
@@ -45,19 +51,7 @@ java -cp "appd-exts-commons-1.1.2.jar" com.appdynamics.extensions.crypto.Encrypt
 
 ## Metrics
 
-| Metric Name | Description |
-|----------------|-------------|
-|status				| 1 (UP/OPEN) 0 (DOWN)|
-|qcur				| current queued requests|
-|scur				| current sessions|
-|stot				| total sessions|
-|bin			         	| Bytes In	|
-|bout				| Bytes Out|
-|ereq				| error requests|
-|eresp				| response errors|
-|econ				| connection errors|
-|act			     	| server is active (server), number of active servers (backend)|
-|bck			     	| server is backup (server), number of backup servers (backend)|
+All the HA proxy metrics are shown. For the complete list of metrics please visit http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#9
 
 ## Custom Dashboard
 ![](https://github.com/Appdynamics/haproxy-monitoring-extension/raw/master/HAProxyCustomDashboard.png)
