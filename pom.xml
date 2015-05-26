@@ -1,47 +1,52 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.appdynamics.extensions</groupId>
-  <artifactId>haproxy-monitoring-extension</artifactId>
-  <version>1.1.1</version>
-  <packaging>jar</packaging>
+    <groupId>com.appdynamics.extensions</groupId>
+    <artifactId>haproxy-monitoring-extension</artifactId>
+    <version>1.1.2</version>
+    <packaging>jar</packaging>
 
-  <name>haproxy-monitoring-extension</name>
-  <url>http://maven.apache.org</url>
+    <name>haproxy-monitoring-extension</name>
+    <url>http://maven.apache.org</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-    <target.dir>${project.build.directory}/HAProxyMonitor</target.dir>
-  </properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+        <target.dir>${project.build.directory}/HAProxyMonitor</target.dir>
+    </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.appdynamics</groupId>
-      <artifactId>machine-agent</artifactId>
-      <version>3.7.11</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.appdynamics</groupId>
-      <artifactId>appd-exts-commons</artifactId>
-      <version>1.1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sourceforge.jexcelapi</groupId>
-      <artifactId>jxl</artifactId>
-      <version>2.6.12</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-  <build>
-    <finalName>${project.artifactId}</finalName>
+    <dependencies>
+        <dependency>
+            <groupId>com.appdynamics</groupId>
+            <artifactId>machine-agent</artifactId>
+            <version>3.7.11</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.appdynamics</groupId>
+            <artifactId>appd-exts-commons</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.jexcelapi</groupId>
+            <artifactId>jxl</artifactId>
+            <version>2.6.12</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <finalName>${project.artifactId}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -87,10 +92,14 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Implementation-Title>HAProxy Monitor v${project.version} Build Date ${maven.build.timestamp}</Implementation-Title>
+                                        <Implementation-Title>HAProxy Monitor v${project.version} Build Date
+                                            ${maven.build.timestamp}
+                                        </Implementation-Title>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -113,7 +122,8 @@
                                     <fileset dir="src/main/resources/conf" includes="monitor.xml"/>
                                 </copy>
                                 <copy todir="${target.dir}">
-                                    <fileset dir="${project.build.directory}" includes="${project.artifactId}.${project.packaging}"/>
+                                    <fileset dir="${project.build.directory}"
+                                             includes="${project.artifactId}.${project.packaging}"/>
                                 </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
                                     <zipfileset dir="${target.dir}" filemode="755" prefix="HAProxyMonitor/"/>
