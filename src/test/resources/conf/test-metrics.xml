@@ -1,0 +1,82 @@
+<!--
+  ~ /*
+  ~   Copyright 2018. AppDynamics LLC and its affiliates.
+  ~   All Rights Reserved.
+  ~   This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+  ~   The copyright notice above does not evidence any actual or intended publication of such source code.
+  ~  */
+  -->
+
+<!--
+aggregationType = AVERAGE | SUM | OBSERVATION
+timeRollUpType = AVERAGE | SUM | CURRENT
+clusterRollUpType = INDIVIDUAL | COLLECTIVE
+-->
+<!--
+Set delta = true for metric to report per-min data
+-->
+<stats>
+    <!-- Items in Nodes|<node> - data looked up from /api/nodes nodeDataMetric-->
+    <stat url="/;csv" name="serverMetrics" children="entries">
+        <metric attr="# pxname" alias="proxy name" column="0" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="svname" alias="server name" column="1" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="qcur" alias="queued_requests" column="2" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="qmax" alias="max_queued_requests" column="3" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="scur" alias="current sessions" column="4" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="smax" alias="max sessions" column="5" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="slim" alias="session limit" column="6" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="stot" alias="total sessions" column="7" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="bin" alias="bytes in" column="8" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="bout" alias="bytes out" column="9" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="dreq" alias="denied requests" column="10" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="dresp" alias="denied responses" column="11" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="ereq" alias="error requests" column="12" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="econ" alias="connection errors" column="13" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="eresp" alias="response errors" column="14" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="wretr" alias="connection retries" column="15" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="wredis" alias="request redispatches" column="16" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="status" alias="status" column="17" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="weight" alias="server weight" column="18" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="act" alias="active servers" column="19" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="bck" alias="backup servers" column="20" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="chkfail" alias="checks failed" column="21" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="chkdown" alias="number of transitions" column="22" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="lastchg" alias="last transition" column="23" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="downtime" alias="total downtime" column="24" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="qlimit" alias="maxqueue" column="25" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="pid" alias="pid" column="26" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="iid" alias="unique proxy id" column="27" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="sid" alias="server id" column="28" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="throttle" alias="throttle percentage" column="29" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="lbtot" alias="lbtot" column="30" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="tracked" alias="tracked" column="31" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="type" alias="type" column="32" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="rate" alias="rate" column="33" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="rate_lim" alias="rate_limit" column="34" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="rate_max" alias="rate_max" column="35" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="check_status" alias="check_status" column="36" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="check_code" alias="check_code" column="37" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="check_duration" alias="check_duration" column="38" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="hrsp_1xx" alias="hrsp_1xx" column="39" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="hrsp_2xx" alias="hrsp_2xx" column="40" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="hrsp_3xx" alias="hrsp_3xx" column="41" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="hrsp_4xx" alias="hrsp_4xx" column="42" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="hrsp_5xx" alias="hrsp_5xx" column="43" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="hrsp_other" alias="hrsp_other" column="44" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="hanafail" alias="failed health check" column="45" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="req_rate" alias="req_rate" column="46" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="req_rate_max" alias="req_rate_max" column="47" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="req_tot" alias="req_tot" column="48" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="cli_abrt" alias="client aborts" column="49" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="srv_abrt" alias="server abortes" column="50" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="comp_in" alias="comp_in" column="51" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="comp_out" alias="comp_out" column="52" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="comp_byp" alias="comp_byp" column="53" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="comp_rsp" alias="comp_rsp" column="54" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="lastsess" alias="lastsess" column="55" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="qtime" alias="qtime" column="56" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="ctime" alias="ctime" column="57" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+        <metric attr="rtime" alias="rtime" column="58" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="ttime" alias="ttime" column="59" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
+    </stat>
+</stats>
