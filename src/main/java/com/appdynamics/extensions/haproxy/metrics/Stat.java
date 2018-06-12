@@ -26,24 +26,6 @@ public class Stat {
     public String children;
     @XmlElement(name = "metric")
     private MetricConfig[] metricConfig;
-    @XmlElement(name = "stat")
-    public Stat stats;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public MetricConfig[] getMetricConfig() {
-        return metricConfig;
-    }
-
-    public void setMetricConfig(MetricConfig[] metricConfig) {
-        this.metricConfig = metricConfig;
-    }
 
     public String getUrl() {
         return url;
@@ -51,6 +33,14 @@ public class Stat {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getChildren() {
@@ -61,18 +51,26 @@ public class Stat {
         this.children = children;
     }
 
+    public MetricConfig[] getMetricConfig() {
+        return metricConfig;
+    }
+
+    public void setMetricConfig(MetricConfig[] metricConfig) {
+        this.metricConfig = metricConfig;
+    }
+
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class Stats {
         @XmlElement(name = "stat")
-        private Stat stats;
+        private Stat stat;
 
-        public Stat getStats() {
-            return stats;
+        public Stat getStat() {
+            return stat;
         }
 
-        public void setStats(Stat stats) {
-            this.stats = stats;
+        public void setStat(Stat stats) {
+            this.stat = stats;
         }
     }
 }

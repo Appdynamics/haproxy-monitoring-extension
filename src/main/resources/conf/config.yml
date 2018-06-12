@@ -12,8 +12,8 @@ servers:
     csvExportUri: ;csv
     username: ""
     password: ""
+    useSsl: false
     proxynames: ""
-    excludeStats: [pid,iid,sid]
 
 
  # For each server you monitor, you will need a total of 1(by default) + 1(for serverMetrics) + 1(for jkMetrics) + 1(for each custom URL)

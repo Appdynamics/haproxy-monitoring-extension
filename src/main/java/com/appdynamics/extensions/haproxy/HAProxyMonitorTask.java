@@ -1,9 +1,16 @@
+/*
+ *
+ *   Copyright 2018. AppDynamics LLC and its affiliates.
+ *   All Rights Reserved.
+ *   This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ *   The copyright notice above does not evidence any actual or intended publication of such source code.
+ *
+ */
+
 package com.appdynamics.extensions.haproxy;
 
 import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.TaskInputArgs;
-import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.haproxy.config.MetricConfig;
@@ -11,10 +18,9 @@ import com.appdynamics.extensions.haproxy.metrics.Stat;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
 import com.appdynamics.extensions.metrics.Metric;
-import com.appdynamics.extensions.util.ArgumentsValidator;
-import com.appdynamics.extensions.util.AssertUtils;
-import com.google.common.base.Strings;
+import com.appdynamics.extensions.util.StringUtils;
 import com.google.common.collect.Lists;
+import com.opencsv.CSVReader;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.write.Label;
@@ -23,26 +29,21 @@ import jxl.write.WritableWorkbook;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+/**
+ * The {@code HAProxyMonitorTask} class handles the {@code AMonitorTaskRunnable} Task submitted by
+ * the {@code HAProxyMonitor}. It runs as a new thread which gets a response from the server, builds
+ * the metric list and prints it.
+ *
+ * @author Balakrishna V, Prashant M
+ * @since appd-exts-commons:2.1.0
+ */
 public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     private static final Logger logger = Logger.getLogger(HAProxyMonitorTask.class);
-
-    private static final String CSV_EXPORT_URI = "csvExportUri";
-
-    private static final String METRIC_SEPARATOR = "|";
-
-    private static final Map<String, String> DEFAULT_ARGS = new HashMap<String, String>() {
-        {
-            put(TaskInputArgs.METRIC_PREFIX, "Custom Metrics|HAProxy");
-        }
-    };
 
     private MonitorContextConfiguration configuration;
 
@@ -56,35 +57,35 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     private List<Metric> metrics = new ArrayList<Metric>();
 
-    public HAProxyMonitorTask(TasksExecutionServiceProvider serviceProvider, MonitorContextConfiguration configuration, Map haServerArgs) {
+    public HAProxyMonitorTask(MonitorContextConfiguration configuration, MetricWriteHelper metricWriteHelper, Map haServerArgs) {
         this.configuration = configuration;
         this.haServerArgs = haServerArgs;
-        this.metricPrefix = configuration.getMetricPrefix() + "|" + haServerArgs.get("displayName");
-        this.metricWriter = serviceProvider.getMetricWriteHelper();
+        this.metricPrefix = configuration.getMetricPrefix() + Constant.METRIC_SEPARATOR + haServerArgs.get(Constant.DISPLAY_NAME);
+        this.metricWriter = metricWriteHelper;
     }
 
+    @Override
     public void onTaskComplete() {
-
+        logger.info("Completed the HAProxy Monitoring Task");
     }
 
     public void run() {
-
-        logger.info("Starting the HAProxy Monitoring Task");
+        logger.info("Starting the HAProxy Monitoring Task for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         try {
-            haServerArgs = ArgumentsValidator.validateArguments(haServerArgs, DEFAULT_ARGS);
             String password = CryptoUtil.getPassword(haServerArgs);
-            if (Strings.isNullOrEmpty(password)) {
-                haServerArgs.put("password", password);
+            if (!StringUtils.validateStrings(password)) {
+                haServerArgs.put(Constant.PASSWORD, password);
             }
 
             Map<String, String> requestMap = buildRequestMap(haServerArgs);
-            String csvPath = (String) haServerArgs.get(CSV_EXPORT_URI);
+            String csvPath = (String) haServerArgs.get(Constant.CSV_EXPORT_URI);
             CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
             String url = UrlBuilder.builder(requestMap).path(csvPath).build();
             String responseString = HttpClientUtils.getResponseAsStr(httpClient, url);
-            AssertUtils.assertNotNull(responseString, "response of the request is empty");
+            //AssertUtils.assertNotNull(responseString, "response of the request is empty");
 
-/*          when need to read the response from local file
+
+            // In case you want to read the response from local file
             if (responseString == null) {
                 responseString = "";
                 String csvFile = "/Users/prashant.mehta/Downloads/demo.csv";
@@ -105,26 +106,27 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
                     e.printStackTrace();
                 }
             }
-            */
 
-            // reads the csv output and writes the response to a spreadsheet
-            // which is used in-turn to get the metrics
+
+            // reads the csv output and writes the response to a spreadsheet which is used to get the metrics
             writeResponseToWorkbook(responseString);
             Stat.Stats stats = (Stat.Stats) configuration.getMetricsXml();
-            Map<Integer, String> allProxies = getAllProxyAndTypes(stats.getStats().getMetricConfig()[0].getColumn());
-            Map<Integer, String> proxyTypes = getAllProxyAndTypes(stats.getStats().getMetricConfig()[1].getColumn());
+            //gets all proxies from the workbook which is in columns 0
+            Map<Integer, String> allProxies = getAllProxyAndTypes(Constant.PROXY_INDEX);
+            //get all proxy types from the workbook which is in column 1
+            Map<Integer, String> proxyTypes = getAllProxyAndTypes(Constant.PROXY_TYPE_INDEX);
 
             Map<Integer, String> proxiesToBeMonitored = filterProxies(haServerArgs, allProxies);
-            printStats(haServerArgs, proxiesToBeMonitored, proxyTypes);
+            CollectAllMetrics(haServerArgs, proxiesToBeMonitored, proxyTypes);
 
-            logger.info("HAProxy Monitoring Task completed successfully");
+            logger.info("HAProxy Monitoring Task completed successfully for : " + Constant.DISPLAY_NAME);
         } catch (Exception e) {
-            logger.error("HAProxy Metrics collection failed", e);
+            logger.error("HAProxy Metrics collection failed for : " + Constant.DISPLAY_NAME, e);
         }
     }
 
     /**
-     * Writes the csv respone to a spreadsheet as a matrix of proxies Vs stats
+     * Writes the csv response to a spreadsheet as a matrix of proxies Vs stats
      *
      * @param responseString
      * @throws Exception
@@ -134,7 +136,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             OutputStream outputStream = new ByteArrayOutputStream();
             outputStream.write(responseString.getBytes());
             workbook = Workbook.createWorkbook(outputStream);
-
             WritableSheet sheet = workbook.createSheet("First Sheet", 0);
 
             BufferedReader reader = new BufferedReader(new StringReader(responseString));
@@ -152,8 +153,8 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             workbook.write();
             workbook.close();
             outputStream.close();
+            logger.debug("response string written to the workbook");
         } catch (Exception e) {
-            logger.error("Error while writing response to workbook stream ", e);
             throw new RuntimeException("Error while writing response to workbook stream");
         }
     }
@@ -183,88 +184,103 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         return workbook.getSheet(0);
     }
 
-
+    /*
+     * Builds a hashMap of the HAServer from the read config file.
+     *
+     * @param haServer
+     * @return
+     */
     private Map<String, String> buildRequestMap(Map haServer) {
         Map<String, String> requestMap = new HashMap<String, String>();
-        requestMap.put("host", (String) haServer.get("host"));
-        requestMap.put("port", String.valueOf(haServer.get("port")));
-        requestMap.put("useSsl", String.valueOf(haServer.get("useSsl")));
-        requestMap.put("username", (String) haServer.get("username"));
-        requestMap.put("password", (String) haServer.get("password"));
+        requestMap.put(Constant.HOST, (String) haServer.get(Constant.HOST));
+        requestMap.put(Constant.PORT, String.valueOf(haServer.get(Constant.PORT)));
+        requestMap.put(Constant.USE_SSL, String.valueOf(haServer.get(Constant.USE_SSL)));
+        requestMap.put(Constant.USER_NAME, (String) haServer.get(Constant.USER_NAME));
+        requestMap.put(Constant.PASSWORD, (String) haServer.get(Constant.PASSWORD));
         return requestMap;
     }
 
+    /*
+     *  Filter proxies from the HA-server proxy arguments and remove it from the all-proxies
+     *  @param haServerArgs
+     *  @param allProxies
+     *  @return
+     */
 
     private Map<Integer, String> filterProxies(Map<String, String> haServerArgs, Map<Integer, String> allProxies) {
-        List<String> proxiesListedInConfigFile = Lists.newArrayList();
-        if (haServerArgs.containsKey("proxynames") && !Strings.isNullOrEmpty(haServerArgs.get("proxynames"))) {
-            proxiesListedInConfigFile = Arrays.asList(haServerArgs.get("proxynames").split(","));
+        List<String> excludeProxies = Lists.newArrayList();
+        if (haServerArgs.containsKey(Constant.PROXY_NAMES) && StringUtils.validateStrings(haServerArgs.get(Constant.PROXY_NAMES))) {
+            excludeProxies = Arrays.asList(haServerArgs.get(Constant.PROXY_NAMES).split(","));
         }
-        if (proxiesListedInConfigFile.size() != 0) {
+        if (excludeProxies.size() != 0) {
             for (Iterator<Map.Entry<Integer, String>> it = allProxies.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<Integer, String> entry = it.next();
-                if (!proxiesListedInConfigFile.contains(entry.getValue())) {
+                if (!excludeProxies.contains(entry.getValue())) {
                     it.remove();
                 }
             }
         }
+        logger.debug("filtered all the exclude proxies");
         return allProxies;
     }
 
 
-    private void printStats(Map<String, String> haServerArgs, Map<Integer, String> proxiesToBeMonitored, Map<Integer, String> proxyTypes) {
-
-        List<String> excludedStats = new ArrayList<String>();
-        if (haServerArgs.containsKey("excludeStats") && !Strings.isNullOrEmpty(haServerArgs.get("excludeStats"))) {
-            excludedStats = Arrays.asList(haServerArgs.get("excludeStats").split(","));
-        }
-
+    private void CollectAllMetrics(Map<String, String> haServerArgs, Map<Integer, String> proxiesToBeMonitored, Map<Integer, String> proxyTypes) {
+        logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
-        if (metricPrefix == null) {
-            metricPrefix = haServerArgs.get(TaskInputArgs.METRIC_PREFIX) + METRIC_SEPARATOR;
-        }
         final int statusColIndex = getColumnFromMetricKey("status");
         final int check_statusColIndex = getColumnFromMetricKey("check_status");
-        MetricConfig[] metricConfigs = ((Stat.Stats) configuration.getMetricsXml()).getStats().getMetricConfig();
+        MetricConfig[] metricConfigs = ((Stat.Stats) configuration.getMetricsXml()).getStat().getMetricConfig();
         for (Map.Entry<Integer, String> proxy : proxiesToBeMonitored.entrySet()) {
             String healthCheckStatus = getHealthCheckStatus(proxy.getKey(), check_statusColIndex);
             for (MetricConfig config : metricConfigs) {
-                if (!excludedStats.contains(config.getAttr())) {
-                    if (config.getAttr().equals("status")) {
-                        Metric metric = new Metric("status", getStatus(proxy.getKey(), statusColIndex), metricPrefix + METRIC_SEPARATOR + proxy.getValue() + METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + METRIC_SEPARATOR + "status");
-                        metrics.add(metric);
-                    } else if (config.getAttr().equals("check_status") && !"".equals(healthCheckStatus)) {
-                        Metric metric = new Metric("check_status", healthCheckStatus, metricPrefix + METRIC_SEPARATOR + proxy.getValue() + METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + METRIC_SEPARATOR + "check_status");
-                        metrics.add(metric);
-                    }
-                    else
+                if (config.getAttr().equals("status")) {
+                    Metric metric = new Metric("status", getStatus(proxy.getKey(), statusColIndex), metricPrefix + Constant.METRIC_SEPARATOR + proxy.getValue() + Constant.METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + Constant.METRIC_SEPARATOR + "status");
+                    metrics.add(metric);
+                } else if (config.getAttr().equals("check_status") && !"".equals(healthCheckStatus)) {
+                    Metric metric = new Metric("check_status", healthCheckStatus, metricPrefix + Constant.METRIC_SEPARATOR + proxy.getValue() + Constant.METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + Constant.METRIC_SEPARATOR + "check_status");
+                    metrics.add(metric);
+                } else
                     printMetric(proxy, proxyTypes, config);
-                }
-
             }
         }
         if (metrics != null && metrics.size() > 0) {
+            logger.debug("metrics collected and starting print metrics");
             metricWriter.transformAndPrintMetrics(metrics);
         }
     }
 
+    /**
+     * @param proxy
+     * @param proxyTypes
+     * @param config
+     */
     private void printMetric(Map.Entry<Integer, String> proxy, Map<Integer, String> proxyTypes, MetricConfig config) {
         int column = config.getColumn();
         if (column == -1) return;
         String cellContent = getCellContents(column, proxy.getKey());
         if (!cellContent.equals("")) {
-            Metric metric = new Metric(config.getAlias(), cellContent, metricPrefix + METRIC_SEPARATOR + proxy.getValue()
-                    + METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + METRIC_SEPARATOR + config.getAlias());
+            Metric metric = new Metric(config.getAlias(), cellContent, metricPrefix + Constant.METRIC_SEPARATOR + proxy.getValue()
+                    + Constant.METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + Constant.METRIC_SEPARATOR + config.getAlias());
             metrics.add(metric);
         }
     }
 
+
+    /**
+     * Returns the column name for the metricKey as in the worksheet
+     *
+     * @param metricKey
+     * @return
+     */
     private int getColumnFromMetricKey(String metricKey) {
-        MetricConfig[] metricConfigs = ((Stat.Stats) configuration.getMetricsXml()).getStats().getMetricConfig();
+        MetricConfig[] metricConfigs = ((Stat.Stats) configuration.getMetricsXml()).getStat().getMetricConfig();
         int column = 0;
         for (MetricConfig config : metricConfigs) {
-            if (config.getAttr().equals(metricKey))
+            if (config.getAttr().equals(metricKey)) {
                 column = config.getColumn();
+                break;
+            }
         }
         return column;
     }
@@ -341,6 +357,11 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         return status;
     }
 
+    /**
+     * Returns the metrics collected
+     *
+     * @return
+     */
     protected List<Metric> getMetrics() {
         return metrics;
     }

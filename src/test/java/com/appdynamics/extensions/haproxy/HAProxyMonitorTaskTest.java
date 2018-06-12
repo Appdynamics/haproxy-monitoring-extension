@@ -1,3 +1,12 @@
+/*
+ *
+ *   Copyright 2018. AppDynamics LLC and its affiliates.
+ *   All Rights Reserved.
+ *   This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
+ *   The copyright notice above does not evidence any actual or intended publication of such source code.
+ *
+ */
+
 package com.appdynamics.extensions.haproxy;
 
 import com.appdynamics.extensions.AMonitorJob;
@@ -39,6 +48,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 
 
+/**
+ *
+ */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HttpClientUtils.class)
 @PowerMockIgnore("javax.net.ssl.*")
@@ -87,7 +99,7 @@ public class HAProxyMonitorTaskTest {
             }
         }
 
-        haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(serviceProvider, contextConfiguration, serverArgs));
+        haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), serverArgs));
 
         PowerMockito.mockStatic(HttpClientUtils.class);
         PowerMockito.mockStatic(CloseableHttpClient.class);
@@ -129,11 +141,6 @@ public class HAProxyMonitorTaskTest {
     @After
     public void tearDown() throws Exception {
     }
-
-//    @Test
-//    public void onTaskComplete() {
-//    }
-
 
     @Test
     public void testHAProxyResponseRunTest() throws IOException {

@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetricConfig {
@@ -35,10 +34,6 @@ public class MetricConfig {
     private String timeRollUpType;
     @XmlAttribute
     private String clusterRollUpType;
-    @XmlAttribute
-    private String character;
-    @XmlElement(name="isBoolean")
-    private String isBoolean= "false";
 
     public String getAttr() { return attr; }
 
@@ -52,22 +47,6 @@ public class MetricConfig {
 
     public void setAlias(String alias) {
         this.alias = alias;
-    }
-
-    public String isBoolean() {
-        return isBoolean;
-    }
-
-    public void setBoolean(String isBoolean) {
-        this.isBoolean = isBoolean;
-    }
-
-    public String getCharacter() {
-        return character;
-    }
-
-    public void setCharacter(String character) {
-        this.character = character;
     }
 
     public String getDelta() {
