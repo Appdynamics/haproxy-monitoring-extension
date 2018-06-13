@@ -19,8 +19,8 @@ import com.appdynamics.extensions.haproxy.config.ServerConfig;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
 import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.util.AssertUtils;
 import com.appdynamics.extensions.util.StringUtils;
-import com.opencsv.CSVReader;
 import jxl.Cell;
 import jxl.Sheet;
 import jxl.Workbook;
@@ -30,7 +30,10 @@ import jxl.write.WritableWorkbook;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -83,30 +86,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
             String url = UrlBuilder.builder(requestMap).path(csvPath).build();
             String responseString = HttpClientUtils.getResponseAsStr(httpClient, url);
-            //AssertUtils.assertNotNull(responseString, "response of the request is empty");
-
-
-            // In case you want to read the response from local file
-            if (responseString == null) {
-                responseString = "";
-                String csvFile = "/Users/prashant.mehta/Downloads/demo.csv";
-
-                CSVReader reader = null;
-                try {
-                    reader = new CSVReader(new FileReader(csvFile));
-                    String[] line;
-                    while ((line = reader.readNext()) != null) {
-                        String str = "";
-                        for (int i = 0; i < line.length; i++) {
-                            str += (line[i] + ',');
-                        }
-                        str += '\n';
-                        responseString += str;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            AssertUtils.assertNotNull(responseString, "response of the request is empty");
 
             //reads the csv output and writes the response to a spreadsheet which is used to get the metrics
             writeResponseToWorkbook(responseString);
@@ -274,7 +254,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     /**
      * Last health check status. For more info please look at check_status in http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#9
-     *
      * @param proxyRowIndex
      * @return
      */
