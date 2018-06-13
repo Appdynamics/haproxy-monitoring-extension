@@ -12,9 +12,7 @@ package com.appdynamics.extensions.haproxy.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetricConfig {
@@ -35,7 +33,9 @@ public class MetricConfig {
     @XmlAttribute
     private String clusterRollUpType;
 
-    public String getAttr() { return attr; }
+    public String getAttr() {
+        return attr;
+    }
 
     public void setAttr(String attr) {
         this.attr = attr;
@@ -81,6 +81,8 @@ public class MetricConfig {
         this.clusterRollUpType = clusterRollUpType;
     }
 
-    public int getColumn(){return column;}
+    public int getColumn() {
+        return column;
+    }
 
 }

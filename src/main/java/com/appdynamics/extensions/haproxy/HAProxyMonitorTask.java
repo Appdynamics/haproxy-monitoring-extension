@@ -14,13 +14,14 @@ import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.haproxy.config.MetricConfig;
-import com.appdynamics.extensions.haproxy.metrics.Stat;
+import com.appdynamics.extensions.haproxy.config.ProxyStats;
+import com.appdynamics.extensions.haproxy.config.ServerConfig;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.util.StringUtils;
-import com.google.common.collect.Lists;
 import com.opencsv.CSVReader;
+import jxl.Cell;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.write.Label;
@@ -107,17 +108,11 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
                 }
             }
 
-
-            // reads the csv output and writes the response to a spreadsheet which is used to get the metrics
+            //reads the csv output and writes the response to a spreadsheet which is used to get the metrics
             writeResponseToWorkbook(responseString);
-            Stat.Stats stats = (Stat.Stats) configuration.getMetricsXml();
-            //gets all proxies from the workbook which is in columns 0
-            Map<Integer, String> allProxies = getAllProxyAndTypes(Constant.PROXY_INDEX);
-            //get all proxy types from the workbook which is in column 1
-            Map<Integer, String> proxyTypes = getAllProxyAndTypes(Constant.PROXY_TYPE_INDEX);
-
-            Map<Integer, String> proxiesToBeMonitored = filterProxies(haServerArgs, allProxies);
-            CollectAllMetrics(haServerArgs, proxiesToBeMonitored, proxyTypes);
+            ProxyStats proxyStats = (ProxyStats) configuration.getMetricsXml();
+            Map<String, List<String>> proxyServers = mapProxyServers(proxyStats);
+            CollectAllMetrics(proxyServers);
 
             logger.info("HAProxy Monitoring Task completed successfully for : " + Constant.DISPLAY_NAME);
         } catch (Exception e) {
@@ -160,22 +155,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
-     * Returns all proxies and proxy types as a Map of row index and Proxy Name.
-     * Column Index is 0 for Px Name and 1 for Server Name
-     *
-     * @param columnIndex
-     * @return
-     */
-    private Map<Integer, String> getAllProxyAndTypes(int columnIndex) {
-        Map<Integer, String> proxiesMap = new HashMap<Integer, String>();
-        int rows = getSheet().getRows();
-        for (int i = 1; i < rows; i++) {
-            proxiesMap.put(i, getSheet().getCell(columnIndex, i).getContents());
-        }
-        return proxiesMap;
-    }
-
-    /**
      * Returns the zeroth sheet of the workbook
      *
      * @return
@@ -200,48 +179,44 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         return requestMap;
     }
 
-    /*
-     *  Filter proxies from the HA-server proxy arguments and remove it from the all-proxies
-     *  @param haServerArgs
-     *  @param allProxies
-     *  @return
-     */
-
-    private Map<Integer, String> filterProxies(Map<String, String> haServerArgs, Map<Integer, String> allProxies) {
-        List<String> excludeProxies = Lists.newArrayList();
-        if (haServerArgs.containsKey(Constant.PROXY_NAMES) && StringUtils.validateStrings(haServerArgs.get(Constant.PROXY_NAMES))) {
-            excludeProxies = Arrays.asList(haServerArgs.get(Constant.PROXY_NAMES).split(","));
-        }
-        if (excludeProxies.size() != 0) {
-            for (Iterator<Map.Entry<Integer, String>> it = allProxies.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry<Integer, String> entry = it.next();
-                if (!excludeProxies.contains(entry.getValue())) {
-                    it.remove();
-                }
+    Map<String, List<String>> mapProxyServers(ProxyStats proxyStats) {
+        Map<String, List<String>> proxyServersMap = new HashMap<>();
+        List<String> serverList = null;
+        for (ServerConfig scfg : proxyStats.getProxyServerConfig().getServerConfigs()) {
+            if (proxyServersMap.get(scfg.getPxname()) == null) {
+                serverList = new LinkedList<>();
+                serverList.add(scfg.getSvname());
+                proxyServersMap.put(scfg.getPxname(), serverList);
+            } else {
+                proxyServersMap.get(scfg.getPxname()).add(scfg.getSvname());
             }
         }
-        logger.debug("filtered all the exclude proxies");
-        return allProxies;
+        return proxyServersMap;
     }
 
-
-    private void CollectAllMetrics(Map<String, String> haServerArgs, Map<Integer, String> proxiesToBeMonitored, Map<Integer, String> proxyTypes) {
+    /**
+     * @param proxyServers
+     */
+    private void CollectAllMetrics(Map<String, List<String>> proxyServers) {
         logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
         final int statusColIndex = getColumnFromMetricKey("status");
         final int check_statusColIndex = getColumnFromMetricKey("check_status");
-        MetricConfig[] metricConfigs = ((Stat.Stats) configuration.getMetricsXml()).getStat().getMetricConfig();
-        for (Map.Entry<Integer, String> proxy : proxiesToBeMonitored.entrySet()) {
-            String healthCheckStatus = getHealthCheckStatus(proxy.getKey(), check_statusColIndex);
-            for (MetricConfig config : metricConfigs) {
-                if (config.getAttr().equals("status")) {
-                    Metric metric = new Metric("status", getStatus(proxy.getKey(), statusColIndex), metricPrefix + Constant.METRIC_SEPARATOR + proxy.getValue() + Constant.METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + Constant.METRIC_SEPARATOR + "status");
-                    metrics.add(metric);
-                } else if (config.getAttr().equals("check_status") && !"".equals(healthCheckStatus)) {
-                    Metric metric = new Metric("check_status", healthCheckStatus, metricPrefix + Constant.METRIC_SEPARATOR + proxy.getValue() + Constant.METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + Constant.METRIC_SEPARATOR + "check_status");
-                    metrics.add(metric);
-                } else
-                    printMetric(proxy, proxyTypes, config);
+        MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
+        for (int index = 1; index < getSheet().getRows(); index++) {
+            Cell[] worksheetRow = getSheet().getRow(index);
+            if (proxyServers.get(worksheetRow[Constant.PROXY_INDEX].getContents()) != null && proxyServers.get(worksheetRow[Constant.PROXY_INDEX].getContents()).contains(worksheetRow[Constant.PROXY_TYPE_INDEX].getContents())) {
+                String healthCheckStatus = getHealthCheckStatus(index, check_statusColIndex);
+                for (MetricConfig config : metricConfigs) {
+                    if (config.getAttr().equals("status")) {
+                        Metric metric = new Metric("status", getStatus(index, statusColIndex), metricPrefix + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_INDEX].getContents() + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_TYPE_INDEX].getContents() + Constant.METRIC_SEPARATOR + "status");
+                        metrics.add(metric);
+                    } else if (config.getAttr().equals("check_status") && !"".equals(healthCheckStatus)) {
+                        Metric metric = new Metric("check_status", healthCheckStatus, metricPrefix + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_INDEX].getContents() + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_TYPE_INDEX].getContents() + Constant.METRIC_SEPARATOR + "check_status");
+                        metrics.add(metric);
+                    } else
+                        printMetric(config, worksheetRow);
+                }
             }
         }
         if (metrics != null && metrics.size() > 0) {
@@ -251,17 +226,16 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
-     * @param proxy
-     * @param proxyTypes
      * @param config
+     * @param worksheetRow
      */
-    private void printMetric(Map.Entry<Integer, String> proxy, Map<Integer, String> proxyTypes, MetricConfig config) {
+    private void printMetric(MetricConfig config, Cell[] worksheetRow) {
         int column = config.getColumn();
         if (column == -1) return;
-        String cellContent = getCellContents(column, proxy.getKey());
+        String cellContent = worksheetRow[column].getContents();
         if (!cellContent.equals("")) {
-            Metric metric = new Metric(config.getAlias(), cellContent, metricPrefix + Constant.METRIC_SEPARATOR + proxy.getValue()
-                    + Constant.METRIC_SEPARATOR + proxyTypes.get(proxy.getKey()) + Constant.METRIC_SEPARATOR + config.getAlias());
+            Metric metric = new Metric(config.getAlias(), cellContent, metricPrefix + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_INDEX].getContents()
+                    + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_TYPE_INDEX].getContents() + Constant.METRIC_SEPARATOR + config.getAlias());
             metrics.add(metric);
         }
     }
@@ -274,7 +248,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      * @return
      */
     private int getColumnFromMetricKey(String metricKey) {
-        MetricConfig[] metricConfigs = ((Stat.Stats) configuration.getMetricsXml()).getStat().getMetricConfig();
+        MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
         int column = 0;
         for (MetricConfig config : metricConfigs) {
             if (config.getAttr().equals(metricKey)) {

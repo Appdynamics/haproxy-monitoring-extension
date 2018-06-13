@@ -9,7 +9,7 @@ package com.appdynamics.extensions.haproxy;
 
 import com.appdynamics.extensions.ABaseMonitor;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
-import com.appdynamics.extensions.haproxy.metrics.Stat;
+import com.appdynamics.extensions.haproxy.config.ProxyStats;
 import com.appdynamics.extensions.util.AssertUtils;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.apache.log4j.ConsoleAppender;
@@ -100,8 +100,7 @@ public class HAProxyMonitor extends ABaseMonitor {
     @Override
     protected void initializeMoreStuff(Map<String, String> args) {
         logger.info("initializing metric.xml file");
-        this.getContextConfiguration().setMetricXml(args.get("metric-file"), Stat.Stats.class);
-
+        this.getContextConfiguration().setMetricXml(args.get("metric-file"), ProxyStats.class);
     }
 
     @Override

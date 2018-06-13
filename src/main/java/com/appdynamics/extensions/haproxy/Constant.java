@@ -11,7 +11,7 @@
 
 package com.appdynamics.extensions.haproxy;
 
-public class Constant{
+public class Constant {
     public static String DISPLAY_NAME;
     public static String HOST;
     public static String PORT;
@@ -24,7 +24,8 @@ public class Constant{
     public static int PROXY_TYPE_INDEX;
     public static String METRIC_PREFIX;
     public static String USE_SSL;
-    static{
+
+    static {
         DISPLAY_NAME = "displayName";
         HOST = "host";
         PORT = "port";
