@@ -75,7 +75,7 @@ Set delta = true for metric to report per-min data
         <metric attr="hrsp_3xx" alias="hrsp_3xx" column="41" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
         <metric attr="hrsp_4xx" alias="hrsp_4xx" column="42" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="hrsp_5xx" alias="hrsp_5xx" column="43" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
-        <metric attr="hrsp_other" alias="hrsp_other" ƒcolumn="44" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="hrsp_other" alias="hrsp_other" column="44" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="hanafail" alias="failed health check" column="45" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
         <metric attr="req_rate" alias="req_rate" column="46" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="req_rate_max" alias="req_rate_max" column="47" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>

@@ -13,7 +13,7 @@ import com.appdynamics.extensions.AMonitorJob;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.haproxy.metrics.Stat;
+import com.appdynamics.extensions.haproxy.config.ProxyStats;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.util.PathResolver;
@@ -64,9 +64,10 @@ public class HAProxyMonitorTaskTest {
     @Mock
     private MetricWriteHelper metricWriter;
 
-    private Stat.Stats stat;
-
     private MonitorContextConfiguration contextConfiguration = new MonitorContextConfiguration("HaProxy Monitor", "Custom Metrics|HAProxy|", PathResolver.resolveDirectory(AManagedMonitor.class), Mockito.mock(AMonitorJob.class));
+
+    private ProxyStats proxyStats;
+
 
     private HAProxyMonitorTask haProxyMonitorTask;
 
@@ -76,12 +77,12 @@ public class HAProxyMonitorTaskTest {
     @Before
     public void before() {
 
-        contextConfiguration.setConfigYml("/Users/prashant.mehta/myCode/haproxy-monitoring-extension/src/test/resources/conf/test-config.yml");
-        contextConfiguration.setMetricXml("/Users/prashant.mehta/myCode/haproxy-monitoring-extension/src/test/resources/conf/test-metrics.xml", Stat.Stats.class);
+        contextConfiguration.setConfigYml("/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/test/resources/conf/test-config.yml");
+        contextConfiguration.setMetricXml("/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/test/resources/conf/test-metrics.xml", ProxyStats.class);
 
         Mockito.when(serviceProvider.getMetricWriteHelper()).thenReturn(metricWriter);
 
-        stat = (Stat.Stats) contextConfiguration.getMetricsXml();
+        proxyStats = (ProxyStats) contextConfiguration.getMetricsXml();
 
         Map configYml = contextConfiguration.getConfigYml();
         Map<String, String> serverArgs = new HashMap<>();
@@ -168,8 +169,6 @@ public class HAProxyMonitorTaskTest {
 
     private Map<String, String> getExpectedResultMap() {
         Map<String, String> map = new HashMap<>();
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|proxy name", "http-in");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|server name", "FRONTEND");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|current sessions", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|max sessions", "42");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|session limit", "100");
@@ -197,8 +196,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|comp_out", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|comp_byp", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|FRONTEND|comp_rsp", "0");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|proxy name", "http-in");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|server name", "IPv4-direct");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|current sessions", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|max sessions", "33");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|session limit", "100");
@@ -210,8 +207,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|error requests", "10");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|status", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-direct|type", "3");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|proxy name", "http-in");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|server name", "IPv4-cached");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|current sessions", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|max sessions", "15");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|session limit", "100");
@@ -223,8 +218,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|error requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|status", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv4-cached|type", "3");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|proxy name", "http-in");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|server name", "IPv6-direct");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|current sessions", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|max sessions", "41");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|session limit", "100");
@@ -236,8 +229,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|error requests", "16124");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|status", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|IPv6-direct|type", "3");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|proxy name", "http-in");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|server name", "local");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|current sessions", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|max sessions", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|session limit", "100");
@@ -249,8 +240,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|error requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|status", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local|type", "3");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|proxy name", "http-in");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|server name", "local-https");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|current sessions", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|max sessions", "5");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|session limit", "100");
@@ -262,8 +251,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|error requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|status", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|http-in|local-https|type", "3");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|proxy name", "www");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|server name", "www");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|max_queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|current sessions", "0");
@@ -304,8 +291,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|qtime", "OK");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|rtime", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|www|ttime", "1");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|proxy name", "www");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|server name", "bck");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|max_queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|current sessions", "0");
@@ -346,8 +331,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|qtime", "OK");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|rtime", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|bck|ttime", "0");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|proxy name", "www");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|server name", "BACKEND");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|max_queued_requests", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|current sessions", "0");
@@ -389,8 +372,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|lastsess", "5");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|rtime", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|www|BACKEND|ttime", "1");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|proxy name", "git");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|server name", "www");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|max_queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|current sessions", "0");
@@ -431,8 +412,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|qtime", "OK");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|rtime", "4");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|www|ttime", "1");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|proxy name", "git");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|server name", "bck");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|max_queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|current sessions", "0");
@@ -473,8 +452,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|qtime", "OK");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|rtime", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|bck|ttime", "0");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|proxy name", "git");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|server name", "BACKEND");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|max_queued_requests", "1");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|current sessions", "0");
@@ -516,8 +493,6 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|lastsess", "2902");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|rtime", "4");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|git|BACKEND|ttime", "1");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|proxy name", "demo");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|server name", "BACKEND");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|max_queued_requests", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|current sessions", "1");

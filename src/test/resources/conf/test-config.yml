@@ -6,14 +6,13 @@ metricPrefix: Custom Metrics|HAProxy|
 
 servers:
   - displayName: "Local HA-Proxy"
-    host: demo.1wt.eu
-#    host: demo.haproxy.org
+#    host: demo.1wt.eu
+    host: demo.haproxy.org
     port: "80"
     csvExportUri: ;csv
     username: ""
     password: ""
-    proxynames: ""
-    excludeStats: [pid,iid,sid]
+    useSsl: false
 
 
  # For each server you monitor, you will need a total of 1(by default) + 1(for serverMetrics) + 1(for jkMetrics) + 1(for each custom URL)
