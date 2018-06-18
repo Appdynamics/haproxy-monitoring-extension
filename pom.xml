@@ -44,6 +44,7 @@
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>3.8</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

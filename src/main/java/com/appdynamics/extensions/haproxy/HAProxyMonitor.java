@@ -11,18 +11,10 @@ import com.appdynamics.extensions.ABaseMonitor;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
 import com.appdynamics.extensions.util.AssertUtils;
-import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 
 /**
@@ -61,30 +53,16 @@ public class HAProxyMonitor extends ABaseMonitor {
             AssertUtils.assertNotNull(configYml, "The config.yml is not available");
             AssertUtils.assertNotNull(this.getContextConfiguration().getMetricsXml(), "Metrics xml not available");
 
-            int serversCount = ((List) configYml.get("servers")).size();
-            if (serversCount == 0) {
+            List<Map<String, ?>> servers = (List<Map<String, ?>>) configYml.get("servers");
+            if (servers.size() == 0) {
                 logger.debug("The server section in test-config.yml is not initialised");
             }
             logger.info("Starting the HAProxy Monitoring Task");
 
-            for (int i = 0; i < serversCount; i++) {
-                Map<String, String> serverArgs = new HashMap<>();
-                Map<String, ?> server = (Map<String, ?>) ((List) configYml.get("servers")).get(i);
-                for (Entry<String, ?> subServerEntry : server.entrySet()) {
-                    if (subServerEntry.getValue() instanceof List) {
-                        String str = "";
-                        Iterator itr = ((List) subServerEntry.getValue()).iterator();
-                        while (itr.hasNext()) {
-                            str += (itr.next().toString() + ',');
-                        }
-                        serverArgs.put(subServerEntry.getKey(), str);
-                    } else {
-                        serverArgs.put(subServerEntry.getKey(), (subServerEntry.getValue()).toString());
-                    }
-                }
-                AssertUtils.assertNotNull(serverArgs, "the server arguements are empty");
-                HAProxyMonitorTask haProxyMonitorTask = new HAProxyMonitorTask(this.getContextConfiguration(), tasksExecutionServiceProvider.getMetricWriteHelper(), serverArgs);
-                tasksExecutionServiceProvider.submit(serverArgs.get("displayName"), haProxyMonitorTask);
+            for (Map<String, ?> server : servers) {
+                AssertUtils.assertNotNull(server, "the server arguements are empty");
+                HAProxyMonitorTask haProxyMonitorTask = new HAProxyMonitorTask(this.getContextConfiguration(), tasksExecutionServiceProvider.getMetricWriteHelper(), server);
+                tasksExecutionServiceProvider.submit((String) server.get("displayName"), haProxyMonitorTask);
             }
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed", e);
@@ -105,25 +83,25 @@ public class HAProxyMonitor extends ABaseMonitor {
 
     @Override
     protected int getTaskCount() {
-        List<Map<String, String>> servers = (List<Map<String, String>>) getContextConfiguration().getConfigYml().get("servers");
+        List<Map<String, ?>> servers = (List<Map<String, ?>>) getContextConfiguration().getConfigYml().get("servers");
         AssertUtils.assertNotNull(servers, "The 'servers' section in test-config.yml is not initialised");
         return servers.size();
     }
 
-    public static void main(String[] args) throws TaskExecutionException {
-
-        ConsoleAppender ca = new ConsoleAppender();
-        ca.setWriter(new OutputStreamWriter(System.out));
-        ca.setLayout(new PatternLayout("%-5p [%t]: %m%n"));
-        ca.setThreshold(Level.DEBUG);
-
-        logger.getRootLogger().addAppender(ca);
-
-        HAProxyMonitor monitor = new HAProxyMonitor();
-
-        final Map<String, String> taskArgs = new HashMap<String, String>();
-        taskArgs.put("config-file", "//Users/prashant.mehta/dev/haproxy-monitoring-extension/src/main/resources/conf/config.yml");
-        taskArgs.put("metric-file", "/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/main/resources/conf/metrics.xml");
-        monitor.execute(taskArgs, null);
-    }
+//    public static void main(String[] args) throws TaskExecutionException {
+//
+//        ConsoleAppender ca = new ConsoleAppender();
+//        ca.setWriter(new OutputStreamWriter(System.out));
+//        ca.setLayout(new PatternLayout("%-5p [%t]: %m%n"));
+//        ca.setThreshold(Level.DEBUG);
+//
+//        logger.getRootLogger().addAppender(ca);
+//
+//        HAProxyMonitor monitor = new HAProxyMonitor();
+//
+//        final Map<String, String> taskArgs = new HashMap<String, String>();
+//        taskArgs.put("config-file", "//Users/prashant.mehta/dev/haproxy-monitoring-extension/src/main/resources/conf/config.yml");
+//        taskArgs.put("metric-file", "/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/main/resources/conf/metrics.xml");
+//        monitor.execute(taskArgs, null);
+//    }
 }

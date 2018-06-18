@@ -40,7 +40,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -77,27 +76,17 @@ public class HAProxyMonitorTaskTest {
     @Before
     public void before() {
 
-        contextConfiguration.setConfigYml("/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/test/resources/conf/test-config.yml");
-        contextConfiguration.setMetricXml("/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/test/resources/conf/test-metrics.xml", ProxyStats.class);
+        contextConfiguration.setConfigYml("src/test/resources/conf/test-config.yml");
+        contextConfiguration.setMetricXml("src/test/resources/conf/test-metrics.xml", ProxyStats.class);
 
         Mockito.when(serviceProvider.getMetricWriteHelper()).thenReturn(metricWriter);
 
         proxyStats = (ProxyStats) contextConfiguration.getMetricsXml();
-
         Map configYml = contextConfiguration.getConfigYml();
         Map<String, String> serverArgs = new HashMap<>();
         Map<String, ?> server = (Map<String, ?>) ((List) configYml.get("servers")).get(0);
-        for (Map.Entry<String, ?> subServerEntry : server.entrySet()) {
-            if (subServerEntry.getValue() instanceof List) {
-                String sb = "";
-                Iterator itr = ((List) subServerEntry.getValue()).iterator();
-                while (itr.hasNext()) {
-                    sb += (itr.next().toString() + ',');
-                }
-                serverArgs.put(subServerEntry.getKey(), sb);
-            } else {
-                serverArgs.put(subServerEntry.getKey(), (subServerEntry.getValue()).toString());
-            }
+        for (Map.Entry<String, ?> serverEntry : server.entrySet()) {
+            serverArgs.put(serverEntry.getKey(), (serverEntry.getValue()).toString());
         }
 
         haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), serverArgs));
@@ -113,9 +102,10 @@ public class HAProxyMonitorTaskTest {
                 });
     }
 
+    //read from the csv file which is the response of the httpClient
     private String readFromCSV() throws IOException {
         String responseString = "";
-        String csvFile = "/Users/prashant.mehta/myCode/haproxy-monitoring-extension/src/test/resources/demo.csv";
+        String csvFile = "src/test/resources/demo.csv";
 
         CSVReader reader = null;
         try {
@@ -147,7 +137,6 @@ public class HAProxyMonitorTaskTest {
     public void testHAProxyResponseRunTest() throws IOException {
         expectedValueMap = getExpectedResultMap();
         haProxyMonitorTask.run();
-
         validateMetrics();
         Assert.assertTrue("The expected values were not sent. The missing values are " + expectedValueMap, expectedValueMap.isEmpty());
     }

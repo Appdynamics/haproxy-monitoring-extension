@@ -25,8 +25,6 @@ public class MetricConfig {
     @XmlAttribute
     private int column;
     @XmlAttribute
-    private String delta;
-    @XmlAttribute
     private String aggregationType;
     @XmlAttribute
     private String timeRollUpType;
@@ -47,14 +45,6 @@ public class MetricConfig {
 
     public void setAlias(String alias) {
         this.alias = alias;
-    }
-
-    public String getDelta() {
-        return delta;
-    }
-
-    public void setDelta(String delta) {
-        this.delta = delta;
     }
 
     public String getAggregationType() {
@@ -81,8 +71,7 @@ public class MetricConfig {
         this.clusterRollUpType = clusterRollUpType;
     }
 
-    public int getColumn() {
-        return column;
-    }
+    public int getColumn() { return column; }
 
+    public void setColumn(int column) { this.column = column; }
 }
