@@ -60,8 +60,8 @@ Set delta = true for metric to report per-min data
         <!--<metric attr="pid" alias="pid" column="26" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />-->
         <!--<metric attr="iid" alias="unique proxy id" column="27" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>-->
         <!--<metric attr="sid" alias="server id" column="28" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />-->
-        <metric attr="throttle" alias="throttle percentage" column="29" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
-        <metric attr="lbtot" alias="lbtot" column="30" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <!--<metric attr="throttle" alias="throttle percentage" column="29" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>-->
+        <!--<metric attr="lbtot" alias="lbtot" column="30" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />-->
         <metric attr="tracked" alias="tracked" column="31" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>
         <metric attr="type" alias="type" column="32" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="rate" alias="rate" column="33" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>

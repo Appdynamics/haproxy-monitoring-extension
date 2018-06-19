@@ -81,6 +81,10 @@ public class HAProxyMonitor extends ABaseMonitor {
         this.getContextConfiguration().setMetricXml(args.get("metric-file"), ProxyStats.class);
     }
 
+    /**
+     *
+     * @return total tasks count
+     */
     @Override
     protected int getTaskCount() {
         List<Map<String, ?>> servers = (List<Map<String, ?>>) getContextConfiguration().getConfigYml().get("servers");
@@ -100,8 +104,8 @@ public class HAProxyMonitor extends ABaseMonitor {
 //        HAProxyMonitor monitor = new HAProxyMonitor();
 //
 //        final Map<String, String> taskArgs = new HashMap<String, String>();
-//        taskArgs.put("config-file", "//Users/prashant.mehta/dev/haproxy-monitoring-extension/src/main/resources/conf/config.yml");
-//        taskArgs.put("metric-file", "/Users/prashant.mehta/dev/haproxy-monitoring-extension/src/main/resources/conf/metrics.xml");
+//        taskArgs.put("config-file", "src/main/resources/conf/config.yml");
+//        taskArgs.put("metric-file", "src/main/resources/conf/metrics.xml");
 //        monitor.execute(taskArgs, null);
 //    }
 }

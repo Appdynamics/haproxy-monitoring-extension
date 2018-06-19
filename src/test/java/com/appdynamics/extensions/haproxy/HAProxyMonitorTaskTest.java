@@ -9,16 +9,17 @@
 
 package com.appdynamics.extensions.haproxy;
 
-import com.appdynamics.extensions.AMonitorJob;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
+import com.appdynamics.extensions.conf.MonitorContext;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.haproxy.config.ProxyStats;
+import com.appdynamics.extensions.haproxy.config.*;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.metrics.Metric;
-import com.appdynamics.extensions.util.PathResolver;
 import com.opencsv.CSVReader;
-import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.After;
 import org.junit.Assert;
@@ -36,11 +37,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Matchers.any;
@@ -63,10 +61,30 @@ public class HAProxyMonitorTaskTest {
     @Mock
     private MetricWriteHelper metricWriter;
 
-    private MonitorContextConfiguration contextConfiguration = new MonitorContextConfiguration("HaProxy Monitor", "Custom Metrics|HAProxy|", PathResolver.resolveDirectory(AManagedMonitor.class), Mockito.mock(AMonitorJob.class));
+    @Mock
+    private MonitorContextConfiguration contextConfiguration;
 
+    @Mock
+    private CloseableHttpResponse response;
+
+    @Mock
+    private MonitorContext context;
+
+    @Mock
     private ProxyStats proxyStats;
 
+    @Mock
+    private CloseableHttpClient httpClient;
+
+    @Mock
+    private ProxyServerConfig proxyServerConfig;
+
+    @Mock
+    private Stat stat;
+
+    private ServerConfig[] serverConfigs = new ServerConfig[13];
+
+    private MetricConfig[] metricConfigs;
 
     private HAProxyMonitorTask haProxyMonitorTask;
 
@@ -74,22 +92,58 @@ public class HAProxyMonitorTaskTest {
 
 
     @Before
-    public void before() {
+    public void before() throws IOException {
 
-        contextConfiguration.setConfigYml("src/test/resources/conf/test-config.yml");
-        contextConfiguration.setMetricXml("src/test/resources/conf/test-metrics.xml", ProxyStats.class);
+        Mockito.when(contextConfiguration.getContext()).thenReturn(context);
+
+        Mockito.when(contextConfiguration.getMetricPrefix()).thenReturn("Custom Metrics|HAProxy");
+
+        Mockito.when(context.getHttpClient()).thenReturn(httpClient);
+
+        Mockito.when(httpClient.execute(any(HttpGet.class))).thenReturn(response);
+
+        Mockito.when(response.getEntity()).thenReturn(new InputStreamEntity(new FileInputStream(new File("src/test/resources/demo.csv"))));
 
         Mockito.when(serviceProvider.getMetricWriteHelper()).thenReturn(metricWriter);
 
-        proxyStats = (ProxyStats) contextConfiguration.getMetricsXml();
-        Map configYml = contextConfiguration.getConfigYml();
-        Map<String, String> serverArgs = new HashMap<>();
-        Map<String, ?> server = (Map<String, ?>) ((List) configYml.get("servers")).get(0);
-        for (Map.Entry<String, ?> serverEntry : server.entrySet()) {
-            serverArgs.put(serverEntry.getKey(), (serverEntry.getValue()).toString());
+        Mockito.when(contextConfiguration.getMetricsXml()).thenReturn(proxyStats);
+
+        Mockito.when(proxyStats.getProxyServerConfig()).thenReturn(proxyServerConfig);
+
+        String[] pxName = {"http-in", "http-in", "http-in", "http-in", "http-in", "http-in", "www", "www", "www", "git", "git", "git", "demo"};
+        String[] svName = {"FRONTEND", "IPv4-direct", "IPv4-cached", "IPv6-direct", "local", "local-https", "www", "bck", "BACKEND", "www", "bck", "BACKEND", "BACKEND"};
+        for (int i = 0; i < 13; i++) {
+            serverConfigs[i] = new ServerConfig();
+            serverConfigs[i].setPxname(pxName[i]);
+            serverConfigs[i].setSvname(svName[i]);
+        }
+        Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
+
+        String[] attr = {"qcur", "qmax", "scur", "smax", "slim", "stot", "bin", "bout", "dreq", "dresp", "ereq", "econ", "eresp", "wretr", "wredis", "status", "weight", "act", "bck", "chkfail", "chkdown", "lastchg", "downtime", "qlimit", "throttle", "lbtot", "tracked", "type", "rate", "rate_lim", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "hanafail", "req_rate", "req_rate_max", "req_tot", "cli_abrt", "srv_abrt", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
+        String[] alias = {"queued_requests", "max_queued_requests", "current sessions", "max sessions", "session limit", "total sessions", "bytes in", "bytes out", "denied requests", "denied responses", "error requests", "connection errors", "response errors", "connection retries", "request redispatches", "status", "server weight", "active servers", "backup servers", "checks failed", "number of transitions", "last transition", "total downtime", "maxqueue", "throttle percentage", "lbtot", "tracked", "type", "rate", "rate_limit", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "failed health check", "req_rate", "req_rate_max", "req_tot", "client aborts", "server abortes", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
+        int[] column = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59};
+        int numOfMetricConfigs = attr.length;
+        metricConfigs = new MetricConfig[numOfMetricConfigs];
+        for (int i = 0; i < numOfMetricConfigs; i++) {
+            metricConfigs[i] = new MetricConfig();
+            metricConfigs[i].setAttr(attr[i]);
+            metricConfigs[i].setAlias(alias[i]);
+            metricConfigs[i].setColumn(column[i]);
         }
 
-        haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), serverArgs));
+        Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
+
+        Mockito.when(proxyStats.getStat()).thenReturn(stat);
+
+        Mockito.when(stat.getMetricConfig()).thenReturn(metricConfigs);
+
+        Map<String, Object> server = new HashMap<>();
+        server.put("displayName", "Local HA-Proxy");
+        server.put("host", "demo.haproxy.org");
+        server.put("port", 80);
+        server.put("csvExportUri", ";csv");
+
+        haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), server));
 
         PowerMockito.mockStatic(HttpClientUtils.class);
         PowerMockito.mockStatic(CloseableHttpClient.class);

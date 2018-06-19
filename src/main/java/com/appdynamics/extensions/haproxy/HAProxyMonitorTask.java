@@ -29,6 +29,7 @@ import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -58,6 +59,8 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     private MetricWriteHelper metricWriter;
 
     private String metricPrefix;
+
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
     private List<Metric> metrics = new ArrayList<Metric>();
 
@@ -159,10 +162,17 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         return requestMap;
     }
 
+    /**
+     * Creates a Map of proxy vs List of servers from the response
+     *
+     * @param proxyStats
+     * @return
+     */
     Map<String, List<String>> mapProxyServers(ProxyStats proxyStats) {
         Map<String, List<String>> proxyServersMap = new HashMap<>();
         List<String> serverList = null;
-        for (ServerConfig serverConfig : proxyStats.getProxyServerConfig().getServerConfigs()) {
+        ServerConfig[] serverConfigs = proxyStats.getProxyServerConfig().getServerConfigs();
+        for (ServerConfig serverConfig : serverConfigs) {
             if (proxyServersMap.get(serverConfig.getPxname()) == null) {
                 serverList = new LinkedList<>();
                 serverList.add(serverConfig.getSvname());
@@ -175,31 +185,34 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
+     * Collects all the metrics corresponding to the entries in the worksheet
+     *
      * @param proxyServers
      */
     private void CollectAllMetrics(Map<String, List<String>> proxyServers) {
         logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
-        final int statusColIndex = getColumnFromMetricKey("status");
-        final int check_statusColIndex = getColumnFromMetricKey("check_status");
         MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
-
-        for (int index = 1; index < getSheet().getRows(); index++) {
+        int rows = getSheet().getRows();
+        for (int index = 1; index < rows; index++) {
             Cell[] worksheetRow = getSheet().getRow(index);
             String commonMetricPath = metricPrefix + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_INDEX].getContents() + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_TYPE_INDEX].getContents() + Constant.METRIC_SEPARATOR;
             List<String> serverList = proxyServers.get(worksheetRow[Constant.PROXY_INDEX].getContents());
 
             if (serverList != null && serverList.contains(worksheetRow[Constant.PROXY_TYPE_INDEX].getContents())) {
-                String healthCheckStatus = getHealthCheckStatus(index, check_statusColIndex);
                 for (MetricConfig config : metricConfigs) {
+                    Map<String, String> propertiesMap = objectMapper.convertValue(config, Map.class);
                     if (config.getAttr().equals("status")) {
-                        Metric metric = new Metric("status", getStatus(index, statusColIndex), commonMetricPath + "status");
+                        Metric metric = new Metric("status", getStatus(index, config.getColumn()), commonMetricPath + "status", propertiesMap);
                         metrics.add(metric);
-                    } else if (config.getAttr().equals("check_status") && !healthCheckStatus.equals("")) {
-                        Metric metric = new Metric("check_status", healthCheckStatus, commonMetricPath + "check_status");
-                        metrics.add(metric);
+                    } else if (config.getAttr().equals("check_status")) {
+                        String healthCheckStatus = getHealthCheckStatus(index, config.getColumn());
+                        if (!healthCheckStatus.equals("")) {
+                            Metric metric = new Metric("check_status", healthCheckStatus, commonMetricPath + "check_status", propertiesMap);
+                            metrics.add(metric);
+                        }
                     } else
-                        collectMetric(config, worksheetRow, commonMetricPath);
+                        collectMetric(config, worksheetRow, commonMetricPath, propertiesMap);
                     logger.debug("Collected metrics for : " + commonMetricPath + config.getAlias());
                 }
             }
@@ -211,35 +224,22 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
+     * collects metrics from the workSheet for respective metricConfigs
+     *
      * @param config
      * @param worksheetRow
      * @param commonMetricPath
+     * @param propertiesMap
      */
-    private void collectMetric(MetricConfig config, Cell[] worksheetRow, String commonMetricPath) {
+    private void collectMetric(MetricConfig config, Cell[] worksheetRow, String commonMetricPath, Map<String, String> propertiesMap) {
         int column = config.getColumn();
         String cellContent = worksheetRow[column].getContents();
         if (!cellContent.equals("")) {
-            Metric metric = new Metric(config.getAlias(), cellContent, commonMetricPath + config.getAlias());
+            Metric metric = new Metric(config.getAlias(), cellContent, commonMetricPath + config.getAlias(), propertiesMap);
             metrics.add(metric);
         }
     }
 
-
-    /**
-     * Returns the column name for the metricKey as in the worksheet
-     *
-     * @param metricKey
-     * @return
-     */
-    private int getColumnFromMetricKey(String metricKey) {
-        MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
-        for (MetricConfig config : metricConfigs) {
-            if (config.getAttr().equals(metricKey)) {
-                return config.getColumn();
-            }
-        }
-        return -1;
-    }
 
     /**
      * Gets the contents of the cell in the workbook given column and row
