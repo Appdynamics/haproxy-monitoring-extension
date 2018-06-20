@@ -34,7 +34,7 @@ public class HAProxyMonitor extends ABaseMonitor {
     protected String getDefaultMetricPrefix() {
         return Constant.METRIC_PREFIX;
     }
-
+    // #TODO Please rename the monitor to HAProxy Monitor to be consistent everywhere.
     @Override
     public String getMonitorName() {
         return "HaProxy Monitor";
@@ -57,11 +57,13 @@ public class HAProxyMonitor extends ABaseMonitor {
             if (servers.size() == 0) {
                 logger.debug("The server section in test-config.yml is not initialised");
             }
+            // #TODO This line is misleading. I think this is not required here.
             logger.info("Starting the HAProxy Monitoring Task");
 
             for (Map<String, ?> server : servers) {
-                AssertUtils.assertNotNull(server, "the server arguements are empty");
+                AssertUtils.assertNotNull(server, "The server arguments are empty");
                 HAProxyMonitorTask haProxyMonitorTask = new HAProxyMonitorTask(this.getContextConfiguration(), tasksExecutionServiceProvider.getMetricWriteHelper(), server);
+                // #TODO There is a chance that the displayName is null or empty. Please make sure that you consider this case.
                 tasksExecutionServiceProvider.submit((String) server.get("displayName"), haProxyMonitorTask);
             }
         } catch (Exception e) {

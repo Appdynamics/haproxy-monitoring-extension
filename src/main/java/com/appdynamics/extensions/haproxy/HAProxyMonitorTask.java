@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
  * @author Prashant M
  * @since appd-exts-commons:2.1.0
  */
+// #TODO There is no "HeartBeat" metric being populated. Please add it.
 public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     private static final Logger logger = Logger.getLogger(HAProxyMonitorTask.class);
@@ -79,6 +80,9 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     public void run() {
         logger.info("Starting the HAProxy Monitoring Task for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         try {
+            // #TODO It is not required to explicitly decrypt the password, since CloseableHttpClient from the commons library
+            // #TODO is being used, that will take care of the decryption. Here the password is being decrypted so that it can be
+            // #TODO sent to the UrlBuilder which does not use the password at all.
             String password = CryptoUtil.getPassword(haServerArgs);
             if (StringUtils.validateStrings(password)) {
                 haServerArgs.put(Constant.PASSWORD, password);
@@ -170,6 +174,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      */
     Map<String, List<String>> mapProxyServers(ProxyStats proxyStats) {
         Map<String, List<String>> proxyServersMap = new HashMap<>();
+        // #TODO Why is this initialised to null?
         List<String> serverList = null;
         ServerConfig[] serverConfigs = proxyStats.getProxyServerConfig().getServerConfigs();
         for (ServerConfig serverConfig : serverConfigs) {
@@ -189,6 +194,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      *
      * @param proxyServers
      */
+    // #TODO method name should start with a small letter.
     private void CollectAllMetrics(Map<String, List<String>> proxyServers) {
         logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
@@ -312,7 +318,8 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         }
         return status;
     }
-
+    // #TODO Why do you have to expose the list of metrics? If this is for the unit test, you can use
+    // #TODO PathCaptor to get the list of metrics.
     /**
      * Returns the metrics collected
      *

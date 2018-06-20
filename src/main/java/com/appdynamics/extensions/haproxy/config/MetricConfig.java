@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.annotation.*;
-
+// #TODO There is no support for delta, multiplier and convert. Please add them.
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetricConfig {
     public static final Logger logger = LoggerFactory.getLogger(MetricConfig.class);
