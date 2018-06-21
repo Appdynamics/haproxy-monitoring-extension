@@ -12,21 +12,14 @@ package com.appdynamics.extensions.haproxy;
 import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.haproxy.config.MetricConfig;
+import com.appdynamics.extensions.haproxy.config.MetricConverter;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
 import com.appdynamics.extensions.haproxy.config.ServerConfig;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.util.AssertUtils;
-import com.appdynamics.extensions.util.StringUtils;
-import jxl.Cell;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.write.Label;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -35,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -52,7 +46,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     private MonitorContextConfiguration configuration;
 
-    private WritableWorkbook workbook;
+    private List<List<String>> workbook;
 
     private Map haServerArgs;
 
@@ -79,11 +73,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     public void run() {
         logger.info("Starting the HAProxy Monitoring Task for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         try {
-            String password = CryptoUtil.getPassword(haServerArgs);
-            if (StringUtils.validateStrings(password)) {
-                haServerArgs.put(Constant.PASSWORD, password);
-            }
-
             Map<String, String> requestMap = buildRequestMap(haServerArgs);
             String csvPath = (String) haServerArgs.get(Constant.CSV_EXPORT_URI);
             CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
@@ -95,11 +84,13 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             writeResponseToWorkbook(responseString);
             ProxyStats proxyStats = (ProxyStats) configuration.getMetricsXml();
             Map<String, List<String>> proxyServers = mapProxyServers(proxyStats);
-            CollectAllMetrics(proxyServers);
+            collectAllMetrics(proxyServers);
 
             logger.info("HAProxy Monitoring Task completed successfully for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed for : " + haServerArgs.get(Constant.DISPLAY_NAME), e);
+
+            metricWriter.printMetric(metricPrefix + "|HeartBeat", BigDecimal.ZERO, "AVG.AVG.IND");
         }
     }
 
@@ -113,37 +104,23 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         try {
             OutputStream outputStream = new ByteArrayOutputStream();
             outputStream.write(responseString.getBytes());
-            workbook = Workbook.createWorkbook(outputStream);
-            WritableSheet sheet = workbook.createSheet("First Sheet", 0);
-
+            workbook = new LinkedList<>();
             BufferedReader reader = new BufferedReader(new StringReader(responseString));
             String line;
-            int row = 0;
             while ((line = reader.readLine()) != null) {
                 Pattern p = Pattern.compile(",");
-                String[] result = p.split(line);
-                for (int col = 0; col < result.length; col++) {
-                    Label label = new Label(col, row, result[col]);
-                    sheet.addCell(label);
+                String[] currLine = p.split(line);
+                List<String> row = new LinkedList<>();
+                for (String columnVal : currLine) {
+                    row.add(columnVal);
                 }
-                row++;
+                workbook.add(row);
             }
-            workbook.write();
-            workbook.close();
             outputStream.close();
             logger.debug("response string written to the workbook");
         } catch (Exception e) {
             throw new RuntimeException("Error while writing response to workbook stream");
         }
-    }
-
-    /**
-     * Returns the zeroth sheet of the workbook
-     *
-     * @return
-     */
-    private Sheet getSheet() {
-        return workbook.getSheet(0);
     }
 
     /*
@@ -170,11 +147,10 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      */
     Map<String, List<String>> mapProxyServers(ProxyStats proxyStats) {
         Map<String, List<String>> proxyServersMap = new HashMap<>();
-        List<String> serverList = null;
         ServerConfig[] serverConfigs = proxyStats.getProxyServerConfig().getServerConfigs();
         for (ServerConfig serverConfig : serverConfigs) {
             if (proxyServersMap.get(serverConfig.getPxname()) == null) {
-                serverList = new LinkedList<>();
+                List<String> serverList = new LinkedList<>();
                 serverList.add(serverConfig.getSvname());
                 proxyServersMap.put(serverConfig.getPxname(), serverList);
             } else {
@@ -189,34 +165,33 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      *
      * @param proxyServers
      */
-    private void CollectAllMetrics(Map<String, List<String>> proxyServers) {
+    private void collectAllMetrics(Map<String, List<String>> proxyServers) {
         logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
         MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
-        int rows = getSheet().getRows();
-        for (int index = 1; index < rows; index++) {
-            Cell[] worksheetRow = getSheet().getRow(index);
-            String commonMetricPath = metricPrefix + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_INDEX].getContents() + Constant.METRIC_SEPARATOR + worksheetRow[Constant.PROXY_TYPE_INDEX].getContents() + Constant.METRIC_SEPARATOR;
-            List<String> serverList = proxyServers.get(worksheetRow[Constant.PROXY_INDEX].getContents());
+        for (List<String> workbookRow : workbook) {
+            String commonMetricPath = metricPrefix + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_INDEX) + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_TYPE_INDEX) + Constant.METRIC_SEPARATOR;
+            List<String> serverList = proxyServers.get(workbookRow.get(Constant.PROXY_INDEX));
 
-            if (serverList != null && serverList.contains(worksheetRow[Constant.PROXY_TYPE_INDEX].getContents())) {
+            if (serverList != null && serverList.contains(workbookRow.get(Constant.PROXY_TYPE_INDEX))) {
                 for (MetricConfig config : metricConfigs) {
                     Map<String, String> propertiesMap = objectMapper.convertValue(config, Map.class);
                     if (config.getAttr().equals("status")) {
-                        Metric metric = new Metric("status", getStatus(index, config.getColumn()), commonMetricPath + "status", propertiesMap);
+                        Metric metric = new Metric("status", getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn())), commonMetricPath + "status", propertiesMap);
                         metrics.add(metric);
                     } else if (config.getAttr().equals("check_status")) {
-                        String healthCheckStatus = getHealthCheckStatus(index, config.getColumn());
+                        String healthCheckStatus = getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn()));
                         if (!healthCheckStatus.equals("")) {
                             Metric metric = new Metric("check_status", healthCheckStatus, commonMetricPath + "check_status", propertiesMap);
                             metrics.add(metric);
                         }
                     } else
-                        collectMetric(config, worksheetRow, commonMetricPath, propertiesMap);
+                        collectMetric(config, workbookRow, commonMetricPath, propertiesMap);
                     logger.debug("Collected metrics for : " + commonMetricPath + config.getAlias());
                 }
             }
         }
+        metrics.add(new Metric("HeartBeat", String.valueOf(1), metricPrefix + "|HeartBeat", "AVG", "AVG", "IND"));
         if (metrics != null && metrics.size() > 0) {
             logger.debug("metrics collected and starting print metrics");
             metricWriter.transformAndPrintMetrics(metrics);
@@ -227,90 +202,32 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      * collects metrics from the workSheet for respective metricConfigs
      *
      * @param config
-     * @param worksheetRow
+     * @param workbookRow
      * @param commonMetricPath
      * @param propertiesMap
      */
-    private void collectMetric(MetricConfig config, Cell[] worksheetRow, String commonMetricPath, Map<String, String> propertiesMap) {
-        int column = config.getColumn();
-        String cellContent = worksheetRow[column].getContents();
+    private void collectMetric(MetricConfig config, List<String> workbookRow, String commonMetricPath, Map<String, String> propertiesMap) {
+        String cellContent = workbookRow.get(config.getColumn());
         if (!cellContent.equals("")) {
             Metric metric = new Metric(config.getAlias(), cellContent, commonMetricPath + config.getAlias(), propertiesMap);
             metrics.add(metric);
         }
     }
 
-
-    /**
-     * Gets the contents of the cell in the workbook given column and row
-     *
-     * @param column
-     * @param row
-     * @return String
-     */
-    private String getCellContents(int column, int row) {
-        String contents = getSheet().getCell(column, row).getContents();
-        return contents;
-    }
-
-
-    /**
-     * Last health check status. For more info please look at check_status in http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#9
-     *
-     * @param proxyRowIndex
-     * @return
-     */
-    private String getHealthCheckStatus(int proxyRowIndex, int check_statusColIndex) {
-        String check_status = getCellContents(check_statusColIndex, proxyRowIndex);
-        if ("UNK".equals(check_status)) {
-            return "0";
-        } else if ("INI".equals(check_status)) {
-            return "1";
-        } else if ("SOCKERR".equals(check_status)) {
-            return "2";
-        } else if ("L4OK".equals(check_status)) {
-            return "3";
-        } else if ("L4TOUT".equals(check_status)) {
-            return "4";
-        } else if ("L4CON".equals(check_status)) {
-            return "5";
-        } else if ("L6OK".equals(check_status)) {
-            return "6";
-        } else if ("L6TOUT".equals(check_status)) {
-            return "7";
-        } else if ("L6RSP".equals(check_status)) {
-            return "8";
-        } else if ("L7OK".equals(check_status)) {
-            return "9";
-        } else if ("L7OKC".equals(check_status)) {
-            return "10";
-        } else if ("L7TOUT".equals(check_status)) {
-            return "11";
-        } else if ("L7RSP".equals(check_status)) {
-            return "12";
-        } else if ("L7STS".equals(check_status)) {
-            return "13";
-        } else {
-            return "";
-        }
-
-    }
-
-
     /**
      * Gets the status of the proxy/server. If it is Up | Open, status is set to
      * 1; if not to 0
      *
-     * @param proxyRowIndex
+     * @param converters
+     * @param status
      * @return
      */
-    private String getStatus(int proxyRowIndex, int statusColIndex) {
-        String status = "0";
-        if (getCellContents(statusColIndex, proxyRowIndex).equals("UP")
-                || getCellContents(statusColIndex, proxyRowIndex).equals("OPEN")) {
-            status = "1";
+    private String getConvertedStatus(MetricConverter[] converters, String status) {
+        for (MetricConverter converter : converters) {
+            if (converter.getLabel().equals(status))
+                return converter.getValue();
         }
-        return status;
+        return "";
     }
 
     /**

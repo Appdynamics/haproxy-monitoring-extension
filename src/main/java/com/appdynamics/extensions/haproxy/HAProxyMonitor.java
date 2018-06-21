@@ -37,7 +37,7 @@ public class HAProxyMonitor extends ABaseMonitor {
 
     @Override
     public String getMonitorName() {
-        return "HaProxy Monitor";
+        return "HAProxy Monitor";
     }
 
     /**
@@ -57,11 +57,11 @@ public class HAProxyMonitor extends ABaseMonitor {
             if (servers.size() == 0) {
                 logger.debug("The server section in test-config.yml is not initialised");
             }
-            logger.info("Starting the HAProxy Monitoring Task");
 
             for (Map<String, ?> server : servers) {
                 AssertUtils.assertNotNull(server, "the server arguements are empty");
                 HAProxyMonitorTask haProxyMonitorTask = new HAProxyMonitorTask(this.getContextConfiguration(), tasksExecutionServiceProvider.getMetricWriteHelper(), server);
+                AssertUtils.assertNotNull(server.get("displayName"), "The displayName can not be null");
                 tasksExecutionServiceProvider.submit((String) server.get("displayName"), haProxyMonitorTask);
             }
         } catch (Exception e) {
@@ -82,7 +82,6 @@ public class HAProxyMonitor extends ABaseMonitor {
     }
 
     /**
-     *
      * @return total tasks count
      */
     @Override

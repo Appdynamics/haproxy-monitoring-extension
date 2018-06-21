@@ -12,7 +12,11 @@ package com.appdynamics.extensions.haproxy.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import java.math.BigDecimal;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetricConfig {
@@ -30,6 +34,12 @@ public class MetricConfig {
     private String timeRollUpType;
     @XmlAttribute
     private String clusterRollUpType;
+    @XmlAttribute
+    private String delta;
+    @XmlAttribute
+    private BigDecimal multiplier;
+    @XmlElement(name = "convert")
+    private MetricConverter[] convert;
 
     public String getAttr() {
         return attr;
@@ -74,4 +84,16 @@ public class MetricConfig {
     public int getColumn() { return column; }
 
     public void setColumn(int column) { this.column = column; }
+
+    public void setDelta(String delta) { this.delta = delta; }
+
+    public String getDelta(){return delta;}
+
+    public BigDecimal getMultiplier(){return multiplier;}
+
+    public void setMultiplier(BigDecimal multiplier) { this.multiplier = multiplier; }
+
+    public void setConvert(MetricConverter[] convert) { this.convert = convert; }
+
+    public MetricConverter[] getMetricConverter(){ return convert; }
 }

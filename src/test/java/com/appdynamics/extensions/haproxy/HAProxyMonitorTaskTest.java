@@ -16,7 +16,6 @@ import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.haproxy.config.*;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.metrics.Metric;
-import com.opencsv.CSVReader;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.InputStreamEntity;
@@ -119,9 +118,11 @@ public class HAProxyMonitorTaskTest {
         }
         Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
 
-        String[] attr = {"qcur", "qmax", "scur", "smax", "slim", "stot", "bin", "bout", "dreq", "dresp", "ereq", "econ", "eresp", "wretr", "wredis", "status", "weight", "act", "bck", "chkfail", "chkdown", "lastchg", "downtime", "qlimit", "throttle", "lbtot", "tracked", "type", "rate", "rate_lim", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "hanafail", "req_rate", "req_rate_max", "req_tot", "cli_abrt", "srv_abrt", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
-        String[] alias = {"queued_requests", "max_queued_requests", "current sessions", "max sessions", "session limit", "total sessions", "bytes in", "bytes out", "denied requests", "denied responses", "error requests", "connection errors", "response errors", "connection retries", "request redispatches", "status", "server weight", "active servers", "backup servers", "checks failed", "number of transitions", "last transition", "total downtime", "maxqueue", "throttle percentage", "lbtot", "tracked", "type", "rate", "rate_limit", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "failed health check", "req_rate", "req_rate_max", "req_tot", "client aborts", "server abortes", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
-        int[] column = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59};
+        String[] attr = {"qcur", "qmax", "scur", "smax", "slim", "stot", "bin", "bout", "dreq", "dresp", "ereq", "econ", "eresp", "wretr", "wredis", "status", "weight", "act", "bck", "chkfail", "chkdown", "lastchg", "downtime", "qlimit", "lbtot", "tracked", "type", "rate", "rate_lim", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "hanafail", "req_rate", "req_rate_max", "req_tot", "cli_abrt", "srv_abrt", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
+        String[] alias = {"queued_requests", "max_queued_requests", "current sessions", "max sessions", "session limit", "total sessions", "bytes in", "bytes out", "denied requests", "denied responses", "error requests", "connection errors", "response errors", "connection retries", "request redispatches", "status", "server weight", "active servers", "backup servers", "checks failed", "number of transitions", "last transition", "total downtime", "maxqueue", "lbtot", "tracked", "type", "rate", "rate_limit", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "failed health check", "req_rate", "req_rate_max", "req_tot", "client aborts", "server abortes", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
+        int[] column = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59};
+        String[] status = {"UP", "OPEN"};
+        String[] check_status = {"UNK", "INI", "SOCKERR", "L4OK", "L4TOUT", "L4CON", "L6OK", "L6TOUT", "L6RSP", "L7OK", "L7OKC", "L7TOUT", "L7RSP", "L7STS"};
         int numOfMetricConfigs = attr.length;
         metricConfigs = new MetricConfig[numOfMetricConfigs];
         for (int i = 0; i < numOfMetricConfigs; i++) {
@@ -129,6 +130,24 @@ public class HAProxyMonitorTaskTest {
             metricConfigs[i].setAttr(attr[i]);
             metricConfigs[i].setAlias(alias[i]);
             metricConfigs[i].setColumn(column[i]);
+            if(metricConfigs[i].getAttr().equals("status")){
+                MetricConverter[] converters = new MetricConverter[status.length];
+                for(int index = 0; index < converters.length; index++){
+                    converters[index] = new MetricConverter();
+                    converters[index].setLabel(status[index]);
+                    converters[index].setValue("1");
+                }
+                metricConfigs[i].setConvert(converters);
+            }
+            if(metricConfigs[i].getAttr().equals("check_status")){
+                MetricConverter[] converters = new MetricConverter[check_status.length];
+                for(int index = 0; index < converters.length; index++){
+                    converters[index] = new MetricConverter();
+                    converters[index].setLabel(check_status[index]);
+                    converters[index].setValue(String.valueOf(index));
+                }
+                metricConfigs[i].setConvert(converters);
+            }
         }
 
         Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
@@ -159,22 +178,16 @@ public class HAProxyMonitorTaskTest {
     //read from the csv file which is the response of the httpClient
     private String readFromCSV() throws IOException {
         String responseString = "";
-        String csvFile = "src/test/resources/demo.csv";
-
-        CSVReader reader = null;
+        File demoFile = new File("src/test/resources/demo.csv");
         try {
-            reader = new CSVReader(new FileReader(csvFile));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        String[] line;
-        while ((line = reader.readNext()) != null) {
-            String str = "";
-            for (int i = 0; i < line.length; i++) {
-                str += (line[i] + ',');
+            BufferedReader br = new BufferedReader(new FileReader(demoFile));
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                responseString += (line + '\n');
+
             }
-            str += '\n';
-            responseString += str;
+        }catch (FileNotFoundException e){
+            logger.error("the demo/data file is not present at the given path", e);
         }
         return responseString;
     }
@@ -576,6 +589,7 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|lastsess", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|rtime", "2");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|ttime", "0");
+        map.put("Custom Metrics|HAProxy|Local HA-Proxy|HeartBeat","1");
         return map;
     }
 

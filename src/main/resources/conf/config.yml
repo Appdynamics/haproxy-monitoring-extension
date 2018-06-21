@@ -2,10 +2,10 @@
 metricPrefix: Custom Metrics|HAProxy|
 #This will create it in specific Tier/Component. Make sure to replace <COMPONENT_ID> with the appropriate one from your environment.
 #To find the <COMPONENT_ID> in your environment, please follow the screenshot https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java
-#metricPrefix: Server|Component:<COMPONENT_ID>|Custom Metrics|Apache|
+#metricPrefix: Server|Component:<COMPONENT_ID>|Custom Metrics|HAProxy|
 
 servers:
-  - displayName: "Local HA-Proxy"
+  - displayName: "Local HAProxy"
 #    host: demo.1wt.eu
     host: "demo.haproxy.org"
     port: 80
@@ -18,6 +18,6 @@ connection:
   socketTimeout: 10000
   connectTimeout: 10000
 
- # For each server you monitor, you will need a total of 1(by default) + 1(for serverMetrics) + 1(for jkMetrics) + 1(for each custom URL)
- # By default we want to support 5 servers, so it is 5 * 4 = 20 threads.
+ # For each server you monitor, you will need a total of 1(by default) thread.
+ # By default we want to support 5 servers, so it is 5 * 1 = 5 threads.
 numberOfThreads: 20

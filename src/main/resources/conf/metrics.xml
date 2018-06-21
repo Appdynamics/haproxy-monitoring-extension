@@ -50,7 +50,10 @@ Set delta = true for metric to report per-min data
         <metric attr="eresp" alias="response errors" column="14" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="wretr" alias="connection retries" column="15" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
         <metric attr="wredis" alias="request redispatches" column="16" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
-        <metric attr="status" alias="status" column="17" aggregationType = "OBSERVATION" timeRollUpType = "CURRENT" clusterRollUpType = "COLLECTIVE"/>
+        <metric attr="status" alias="status" column="17" aggregationType = "OBSERVATION" timeRollUpType = "CURRENT" clusterRollUpType = "COLLECTIVE">
+            <convert str="UP" value="1"/>
+            <convert str="OPEN" value="1"/>
+        </metric>
         <metric attr="weight" alias="server weight" column="18" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="act" alias="active servers" column="19" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
         <metric attr="bck" alias="backup servers" column="20" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
@@ -69,7 +72,22 @@ Set delta = true for metric to report per-min data
         <metric attr="rate" alias="rate" column="33" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
         <metric attr="rate_lim" alias="rate_limit" column="34" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="rate_max" alias="rate_max" column="35" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
-        <metric attr="check_status" alias="check_status" column="36" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="check_status" alias="check_status" column="36" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" >
+            <convert str="UNK" value="0"/>
+            <convert str="INI" value="1"/>
+            <convert str="SOCKERR" value="2"/>
+            <convert str="L4OK" value="3"/>
+            <convert str="L4TOUT" value="4"/>
+            <convert str="L4CON" value="5"/>
+            <convert str="L6OK" value="6"/>
+            <convert str="L6TOUT" value="7"/>
+            <convert str="L6RSP" value="8"/>
+            <convert str="L7OK" value="9"/>
+            <convert str="L7OKC" value="10"/>
+            <convert str="L7TOUT" value="11"/>
+            <convert str="L7RSP" value="12"/>
+            <convert str="L7STS" value="13"/>
+        </metric>
         <metric attr="check_code" alias="check_code" column="37" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
         <metric attr="check_duration" alias="check_duration" column="38" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="hrsp_1xx" alias="hrsp_1xx" column="39" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
