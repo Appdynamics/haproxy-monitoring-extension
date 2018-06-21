@@ -89,7 +89,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             logger.info("HAProxy Monitoring Task completed successfully for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed for : " + haServerArgs.get(Constant.DISPLAY_NAME), e);
-
             metricWriter.printMetric(metricPrefix + "|HeartBeat", BigDecimal.ZERO, "AVG.AVG.IND");
         }
     }
@@ -228,15 +227,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
                 return converter.getValue();
         }
         return "";
-    }
-
-    /**
-     * Returns the metrics collected
-     *
-     * @return
-     */
-    protected List<Metric> getMetrics() {
-        return metrics;
     }
 
 }

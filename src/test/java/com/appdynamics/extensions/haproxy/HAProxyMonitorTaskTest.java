@@ -25,6 +25,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -39,10 +40,11 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-
+import static org.mockito.Mockito.*;
 
 /**
  *
@@ -89,6 +91,7 @@ public class HAProxyMonitorTaskTest {
 
     private Map<String, String> expectedValueMap;
 
+   private ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
     @Before
     public void before() throws IOException {
@@ -209,7 +212,8 @@ public class HAProxyMonitorTaskTest {
     }
 
     private void validateMetrics() {
-        for (Metric metric : haProxyMonitorTask.getMetrics()) {
+        verify(metricWriter).transformAndPrintMetrics(pathCaptor.capture());
+        for (Metric metric : (List<Metric>)pathCaptor.getValue()) {
             String actualValue = metric.getMetricValue();
             String metricName = metric.getMetricPath();
             if (expectedValueMap.containsKey(metricName)) {
