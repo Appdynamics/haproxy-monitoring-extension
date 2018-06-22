@@ -91,7 +91,7 @@ public class HAProxyMonitorTaskTest {
 
     private Map<String, String> expectedValueMap;
 
-   private ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
+    private ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
     @Before
     public void before() throws IOException {
@@ -133,18 +133,18 @@ public class HAProxyMonitorTaskTest {
             metricConfigs[i].setAttr(attr[i]);
             metricConfigs[i].setAlias(alias[i]);
             metricConfigs[i].setColumn(column[i]);
-            if(metricConfigs[i].getAttr().equals("status")){
+            if (metricConfigs[i].getAttr().equals("status")) {
                 MetricConverter[] converters = new MetricConverter[status.length];
-                for(int index = 0; index < converters.length; index++){
+                for (int index = 0; index < converters.length; index++) {
                     converters[index] = new MetricConverter();
                     converters[index].setLabel(status[index]);
                     converters[index].setValue("1");
                 }
                 metricConfigs[i].setConvert(converters);
             }
-            if(metricConfigs[i].getAttr().equals("check_status")){
+            if (metricConfigs[i].getAttr().equals("check_status")) {
                 MetricConverter[] converters = new MetricConverter[check_status.length];
-                for(int index = 0; index < converters.length; index++){
+                for (int index = 0; index < converters.length; index++) {
                     converters[index] = new MetricConverter();
                     converters[index].setLabel(check_status[index]);
                     converters[index].setValue(String.valueOf(index));
@@ -189,7 +189,7 @@ public class HAProxyMonitorTaskTest {
                 responseString += (line + '\n');
 
             }
-        }catch (FileNotFoundException e){
+        } catch (FileNotFoundException e) {
             logger.error("the demo/data file is not present at the given path", e);
         }
         return responseString;
@@ -213,7 +213,7 @@ public class HAProxyMonitorTaskTest {
 
     private void validateMetrics() {
         verify(metricWriter).transformAndPrintMetrics(pathCaptor.capture());
-        for (Metric metric : (List<Metric>)pathCaptor.getValue()) {
+        for (Metric metric : (List<Metric>) pathCaptor.getValue()) {
             String actualValue = metric.getMetricValue();
             String metricName = metric.getMetricPath();
             if (expectedValueMap.containsKey(metricName)) {
@@ -593,7 +593,7 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|lastsess", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|rtime", "2");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|ttime", "0");
-        map.put("Custom Metrics|HAProxy|Local HA-Proxy|HeartBeat","1");
+        map.put("Custom Metrics|HAProxy|Local HA-Proxy|HeartBeat", "1");
         return map;
     }
 

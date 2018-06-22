@@ -175,13 +175,11 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             if (serverList != null && serverList.contains(workbookRow.get(Constant.PROXY_TYPE_INDEX))) {
                 for (MetricConfig config : metricConfigs) {
                     Map<String, String> propertiesMap = objectMapper.convertValue(config, Map.class);
-                    if (config.getAttr().equals("status")) {
-                        Metric metric = new Metric("status", getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn())), commonMetricPath + "status", propertiesMap);
-                        metrics.add(metric);
-                    } else if (config.getAttr().equals("check_status")) {
-                        String healthCheckStatus = getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn()));
-                        if (!healthCheckStatus.equals("")) {
-                            Metric metric = new Metric("check_status", healthCheckStatus, commonMetricPath + "check_status", propertiesMap);
+                    //For any Non-Integer metric, it will be evaluated from the MetricConverter as defined in the metric.xml
+                    if (config.getMetricConverter() != null) {
+                        String convertedMetricValue = getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn()));
+                        if (!convertedMetricValue.equals("")) {
+                            Metric metric = new Metric(config.getAlias(), convertedMetricValue, commonMetricPath + config.getAlias(), propertiesMap);
                             metrics.add(metric);
                         }
                     } else
