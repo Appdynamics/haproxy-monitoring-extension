@@ -46,17 +46,13 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     private MonitorContextConfiguration configuration;
 
-    private List<List<String>> workbook;
-
     private Map haServerArgs;
 
     private MetricWriteHelper metricWriter;
 
     private String metricPrefix;
 
-    private static ObjectMapper objectMapper = new ObjectMapper();
-
-    private List<Metric> metrics = new ArrayList<Metric>();
+    private int heartBeatValue = 0;
 
     public HAProxyMonitorTask(MonitorContextConfiguration configuration, MetricWriteHelper metricWriteHelper, Map haServerArgs) {
         this.configuration = configuration;
@@ -67,6 +63,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     @Override
     public void onTaskComplete() {
+        metricWriter.printMetric(metricPrefix + "|HeartBeat", BigDecimal.valueOf(heartBeatValue), "AVG.AVG.IND");
         logger.info("Completed the HAProxy Monitoring Task");
     }
 
@@ -79,17 +76,16 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             String url = UrlBuilder.builder(requestMap).path(csvPath).build();
             String responseString = HttpClientUtils.getResponseAsStr(httpClient, url);
             AssertUtils.assertNotNull(responseString, "response of the request is empty");
+            heartBeatValue = 1;
 
             //reads the csv output and writes the response to a spreadsheet which is used to get the metrics
-            writeResponseToWorkbook(responseString);
+            List<List<String>> workbook = writeResponseToWorkbook(responseString);
             ProxyStats proxyStats = (ProxyStats) configuration.getMetricsXml();
             Map<String, List<String>> proxyServers = mapProxyServers(proxyStats);
-            collectAllMetrics(proxyServers);
-
+            collectAllMetrics(proxyServers, workbook);
             logger.info("HAProxy Monitoring Task completed successfully for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed for : " + haServerArgs.get(Constant.DISPLAY_NAME), e);
-            metricWriter.printMetric(metricPrefix + "|HeartBeat", BigDecimal.ZERO, "AVG.AVG.IND");
         }
     }
 
@@ -99,11 +95,11 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      * @param responseString
      * @throws Exception
      */
-    private void writeResponseToWorkbook(String responseString) throws Exception {
+    private List<List<String>> writeResponseToWorkbook(String responseString) throws Exception {
         try {
             OutputStream outputStream = new ByteArrayOutputStream();
             outputStream.write(responseString.getBytes());
-            workbook = new LinkedList<>();
+            List<List<String>> workbook = new LinkedList<>();
             BufferedReader reader = new BufferedReader(new StringReader(responseString));
             String line;
             while ((line = reader.readLine()) != null) {
@@ -117,6 +113,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             }
             outputStream.close();
             logger.debug("response string written to the workbook");
+            return workbook;
         } catch (Exception e) {
             throw new RuntimeException("Error while writing response to workbook stream");
         }
@@ -164,10 +161,13 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      *
      * @param proxyServers
      */
-    private void collectAllMetrics(Map<String, List<String>> proxyServers) {
+    private void collectAllMetrics(Map<String, List<String>> proxyServers, List<List<String>> workbook) {
         logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
         MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Metric> metrics = new ArrayList<Metric>();
+
         for (List<String> workbookRow : workbook) {
             String commonMetricPath = metricPrefix + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_INDEX) + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_TYPE_INDEX) + Constant.METRIC_SEPARATOR;
             List<String> serverList = proxyServers.get(workbookRow.get(Constant.PROXY_INDEX));
@@ -182,13 +182,15 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
                             Metric metric = new Metric(config.getAlias(), convertedMetricValue, commonMetricPath + config.getAlias(), propertiesMap);
                             metrics.add(metric);
                         }
-                    } else
-                        collectMetric(config, workbookRow, commonMetricPath, propertiesMap);
+                    } else {
+                        Metric metric = collectMetric(config, workbookRow, commonMetricPath, propertiesMap);
+                        if (metric != null)
+                            metrics.add(metric);
+                    }
                     logger.debug("Collected metrics for : " + commonMetricPath + config.getAlias());
                 }
             }
         }
-        metrics.add(new Metric("HeartBeat", String.valueOf(1), metricPrefix + "|HeartBeat", "AVG", "AVG", "IND"));
         if (metrics != null && metrics.size() > 0) {
             logger.debug("metrics collected and starting print metrics");
             metricWriter.transformAndPrintMetrics(metrics);
@@ -203,12 +205,11 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      * @param commonMetricPath
      * @param propertiesMap
      */
-    private void collectMetric(MetricConfig config, List<String> workbookRow, String commonMetricPath, Map<String, String> propertiesMap) {
+    private Metric collectMetric(MetricConfig config, List<String> workbookRow, String commonMetricPath, Map<String, String> propertiesMap) {
         String cellContent = workbookRow.get(config.getColumn());
-        if (!cellContent.equals("")) {
-            Metric metric = new Metric(config.getAlias(), cellContent, commonMetricPath + config.getAlias(), propertiesMap);
-            metrics.add(metric);
-        }
+        if (!cellContent.equals(""))
+            return new Metric(config.getAlias(), cellContent, commonMetricPath + config.getAlias(), propertiesMap);
+        return null;
     }
 
     /**

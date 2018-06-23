@@ -28,7 +28,6 @@ import java.util.Map;
 public class HAProxyMonitor extends ABaseMonitor {
 
     private static Logger logger = Logger.getLogger(HAProxyMonitor.class);
-    private Map<String, ?> configYml;
 
     @Override
     protected String getDefaultMetricPrefix() {
@@ -48,7 +47,7 @@ public class HAProxyMonitor extends ABaseMonitor {
     @Override
     protected void doRun(TasksExecutionServiceProvider tasksExecutionServiceProvider) {
         try {
-            configYml = this.getContextConfiguration().getConfigYml();
+            Map<String, ?> configYml = this.getContextConfiguration().getConfigYml();
 
             AssertUtils.assertNotNull(configYml, "The config.yml is not available");
             AssertUtils.assertNotNull(this.getContextConfiguration().getMetricsXml(), "Metrics xml not available");

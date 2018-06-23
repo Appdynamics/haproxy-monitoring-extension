@@ -13,10 +13,11 @@ timeRollUpType = AVERAGE | SUM | CURRENT
 clusterRollUpType = INDIVIDUAL | COLLECTIVE
 -->
 <!--
+multiplier = a number to multiply/normalize the metricValue e.g. If the Metric is "ReqPerSec" and the alias is "Requests/min" then use multiplier as "60"
 Set delta = true for metric to report per-min data
+Add "convert" for a metric if it has some non-numeric metric-value. Map the metric-value and it will be used while printmetric. e.g. <convert str="UP" value="1"/>
 -->
 <proxy-stats>
-    <!-- Items in Nodes|<node> - data looked up from /api/nodes nodeDataMetric-->
     <proxy-servers name="proxy-servers" children="entries">
         <servers pxname="http-in" svname="FRONTEND" />
         <servers pxname="http-in" svname="IPv4-direct" />
