@@ -15,6 +15,6 @@ servers:
     useSsl: false
 
 
- # For each server you monitor, you will need a total of 1(by default) + 1(for serverMetrics) + 1(for jkMetrics) + 1(for each custom URL)
- # By default we want to support 5 servers, so it is 5 * 4 = 20 threads.
+ # For each server you monitor, you will need a total of 1(by default) thread.
+ # By default we want to support 5 servers, so it is 5 * 1 = 5 threads.
 numberOfThreads: 5
