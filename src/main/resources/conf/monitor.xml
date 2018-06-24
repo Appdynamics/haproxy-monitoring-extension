@@ -24,6 +24,8 @@
 
             <!--URI of the haproxy CSV stats url. See the 'CSV Export' link on your haproxy stats page -->
             <argument name="csv-export-uri" is-required="true" default-value=";csv"/>
+            <!--If the haproxy stats URI is SSL enabled, ie; HTTPS, use the below option -->
+            <argument name="use-ssl" is-required="false" default-value="false"/>
 
             <argument name="username" is-required="false" default-value=""/>
             <argument name="password" is-required="false" default-value=""/>
