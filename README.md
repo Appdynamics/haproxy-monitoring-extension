@@ -23,12 +23,15 @@ Notes: Works with HAProxy v 1.3 and above.
 
         <argument name="username" is-required="false" default-value=""/>
         <argument name="password" is-required="false" default-value=""/>
+        <!--If the haproxy stats URI is SSL enabled, ie; HTTPS, use the below option -->
+        <argument name="use-ssl" is-required="false" default-value="false"/>
 
         <!--proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored -->
         <argument name="proxynames" is-required="false" default-value=""/>
         <!--HA Proxy stats as a comma separated values to be excluded from monitoring -->
         <argument name="excludeStats" is-required="false" default-value="pid,iid,sid"/>
-        <argument name="metric-prefix" is-required="false" default-value="Custom Metrics|HAProxy|"/>
+        <!--Please ensure the Component ID is set
+        <argument name="metric-prefix" is-required="false" default-value="Server|Component:<<component_id>>|Custom Metrics|HAProxy|"/>
   ```
      
 
