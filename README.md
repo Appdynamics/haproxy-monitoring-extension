@@ -24,7 +24,7 @@ Notes: Works with HAProxy v 1.3 and above.
         <argument name="username" is-required="false" default-value=""/>
         <argument name="password" is-required="false" default-value=""/>
         <!--If the haproxy stats URI is SSL enabled, ie; HTTPS, use the below option -->
-        <argument name="use-ssl" is-required="false" default-value=""/>
+        <argument name="use-ssl" is-required="false" default-value="false"/>
 
         <!--proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored -->
         <argument name="proxynames" is-required="false" default-value=""/>
