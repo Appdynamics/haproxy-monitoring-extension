@@ -1,71 +1,159 @@
 # AppDynamics HAProxy Monitoring Extension
 
-This extension works only with the standalone machine agent.
 
-##Use Case
+## Use Case
 
-HAProxy is an open source, high performance TCP/HTTP Load Balancer commonly used to improve the performance of web sites and services by spreading requests across multiple servers. 
-The HAProxy Monitoring extension collects key metrics from HAProxy Load balancer of the underlying proxies/servers and presents them to the AppDynamics Metric Browser. 
+HAProxy is an open source, high performance TCP/HTTP Load Balancer commonly used to improve the performance of web sites and services by spreading requests across multiple servers. The HAProxy Monitoring extension collects key metrics from HAProxy Load balancer of the underlying proxies/servers and presents them to the AppDynamics Metric Browser. 
 
-Notes: Works with HAProxy v 1.3 and above.
 
-##Installation
+## Prerequisites
 
-1. Run `mvn clean install` from the haproxy-monitoring-extension directory and find the HAProxyMonitor.zip in the "target" folder.
-2. Unzip as "HAProxyMonitor" and copy the "HAProxyMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
-4. In `<MACHINE_AGENT_HOME>/monitors/HAProxyMonitor/`, open monitor.xml and configure the HAProxy parameters.
-  ```
-  	<argument name="host" is-required="true" default-value="demo.1wt.eu"/>
-        <argument name="port" is-required="true" default-value="80"/>
+HAProxy Monitoring Extension works with HAProxy v1.3 and above.
 
-        <!--URI of the haproxy CSV stats url. See the 'CSV Export' link on your haproxy stats page -->
-        <argument name="csv-export-uri" is-required="true" default-value=";csv"/>
+In order to use this extension, you do need a [Standalone JAVA Machine Agent](https://docs.appdynamics.com/display/PRO44/Java+Agent) or [SIM Agent](https://docs.appdynamics.com/display/PRO44/Server+Visibility).  For more details on downloading these products, please  visit [here](https://download.appdynamics.com/).
+The extension needs to be able to connect to the HAProxy in order to collect and send metrics. To do this, you will have to either establish a remote connection in between the extension and the product, or have an agent on the same machine running the product in order for the extension to collect and send the metrics.
+  
+## Installation
+1. Download and unzip the HAProxyMonitor-2.0.0.zip to the "<MachineAgent_Dir>/monitors" directory
+2. Edit the file config.yml as described below in Configuration Section, located in <MachineAgent_Dir>/monitors/HAProxyMonitor and update the server(s) details.
+3. All metrics to be reported are configured in metrics.xml. Users can remove entries from metrics.xml to stop the metric from reporting, or add new entries as well.
+4. Restart the Machine Agent
 
-        <argument name="username" is-required="false" default-value=""/>
-        <argument name="password" is-required="false" default-value=""/>
+Please place the extension in the **"monitors"** directory of your **Machine Agent** installation directory. Do not place the extension in the **"extensions"** directory of your **Machine Agent** installation directory.
+In the AppDynamics Metric Browser, look for **Application Infrastructure Performance|\<Tier\>|Custom Metrics|HAProxy** and you should be able to see all the metrics.
 
-        <!--proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored -->
-        <argument name="proxynames" is-required="false" default-value=""/>
-        <!--HA Proxy stats as a comma separated values to be excluded from monitoring -->
-        <argument name="excludeStats" is-required="false" default-value="pid,iid,sid"/>
-        <argument name="metric-prefix" is-required="false" default-value="Custom Metrics|HAProxy|"/>
-  ```
-     
+## Configuration
+### Config.yml
 
-5. Restart the Machine Agent. 
+Configure the extension by editing the config.yml file in `<MACHINE_AGENT_HOME>/monitors/HAProxyMonitor/`.
+  1. Configure the "COMPONENT_ID" under which the metrics need to be reported. This can be done by changing the value of `<COMPONENT_ID>` in   **metricPrefix: Server|Component:<COMPONENT_ID>|Custom Metrics|HAProxy|**.
+       For example,
+       ```
+       metricPrefix: "Server|Component:100|Custom Metrics|HAProxy|"
+       ```
+
+  2. The extension supports reporting metrics from multiple HAProxy instances. The monitor provides an option to add HAProxy server/s for monitoring the metrics provided by the particular end-point. Have a look at config.yml for more details.
+      For example:
+      ```
+      metricPrefix: "Server|Component:<COMPONENT_ID>|Custom Metrics|HAProxy|"
+      servers:
+        - displayName: "Local HAProxy"
+          host: "demo.haproxy.org"
+          port: 80
+          csvExportUri: ";csv"
+          username: ""
+          password: ""
+          encryptedPassword: ""
+          useSsl: false
+      connection: 
+        connectTimeout: 10000
+        socketTimeout: 10000
+      ```
+
+  3. Configure the numberOfThreads.
+     For example,
+     If number of servers that need to be monitored is 5, then number of threads required is 5 * 1 = 5
+     ```
+     numberOfThreads: 5
+     ```
+
+
+#### Metrics.xml
+
+You can add/remove metrics of your choice by modifying the provided metrics.xml file. This file consists of all the metrics that will be monitored and sent to the controller. Please look how the metrics have been defined and follow the same convention, when adding new metrics. You do have the ability to chosoe your Rollup types as well as set an alias that you would like to be displayed on the metric browser.
+
+   1. Proxy Servers Configuration
+    Add the `pxname` Proxy Name and `svname` Service Name as under the servers tag as shown below.
+``` 
+            <proxy-servers name="proxy-servers">
+                    <servers pxname="http-in" svname="FRONTEND" />
+            </proxy-servers>
+ ```
  
-In the AppDynamics Metric Browser, look for: Application Infrastructure Performance  | \<Tier\> | Custom Metrics | HAProxy
+   2. Metric Stat Configuration
+    Add the `metric` to be monitored under the metric tag as shown below.
+```
+         <stat name="metrics">
+                <metric attr="qcur" alias="queued_requests" column="2" aggregationType = "OBSERVATION" timeRollUpType = "CURRENT" clusterRollUpType = "COLLECTIVE" />
+          </stat>
+ ```
+For configuring the metrics, the following properties can be used:
 
-##Password Encryption Support
+     |     Property      |   Default value |         Possible values         |                                               Description                                                      |
+     | :---------------- | :-------------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------- |
+     | alias             | metric name     | Any string                      | The substitute name to be used in the metric browser instead of metric name.                                   |
+     | aggregationType   | "AVERAGE"       | "AVERAGE", "SUM", "OBSERVATION" | [Aggregation qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)    |
+     | timeRollUpType    | "AVERAGE"       | "AVERAGE", "SUM", "CURRENT"     | [Time roll-up qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)   |
+     | clusterRollUpType | "INDIVIDUAL"    | "INDIVIDUAL", "COLLECTIVE"      | [Cluster roll-up qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)|
+     | multiplier        | 1               | Any number                      | Value with which the metric needs to be multiplied.                                                            |
+     | convert           | null            | Any key value map               | Set of key value pairs that indicates the value to which the metrics need to be transformed. eg: UP:1, OPEN:1  |
+     | delta             | false           | true, false                     | If enabled, gives the delta values of metrics instead of actual values.                                        |
 
-To avoid setting the clear text password in the monitor.xml. Please follow the process to encrypt the password and set the encrypted password and the key in the monitor.xml
 
-1. Download the util jar to encrypt the password from https://github.com/Appdynamics/maven-repo/raw/master/releases/com/appdynamics/appd-exts-commons/1.1.2/appd-exts-commons-1.1.2.jar 
-2. Encrypt password from the commandline 
-java -cp "appd-exts-commons-1.1.2.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword 
-3. Add the following properties in the monitor.xml substituting the default password argument.
-<pre>
-&lt;argument name="password-encrypted" is-required="true" default-value="&lt;ENCRYPTED_PASSWORD&gt;"/&gt;
-&lt;argument name="encryption-key" is-required="true" default-value="myKey"/&gt;
-</pre>
+ **All these metric properties are optional, and the default value shown in the table is applied to the metric (if a property has not been specified) by default.**
+
+
 
 ## Metrics
+Some of the HA-proxy metrics are shown here. For the complete list of metrics please visit [HAProxy Management Guide](https://www.haproxy.org/download/1.8/doc/management.txt).
 
-All the HA proxy metrics are shown. For the complete list of metrics please visit http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#9
+     pxname : proxy name
+     svname : service name (FRONTEND for frontend, BACKEND for backend, any name for server/listener)
+     qcur : current queued requests. For the backend this reports the number queued without a server assigned.
+     qmax : max value of qcur
+     scur : current sessions
+     smax : max sessions
+     slim : configured session limit
+     stot : cumulative number of sessions
+     bin : bytes in
+     bout: bytes out
 
-## Custom Dashboard
-![](https://github.com/Appdynamics/haproxy-monitoring-extension/raw/master/HAProxyCustomDashboard.png)
+## Credentials Encryption
 
-##Contributing
+To avoid setting the clear text password in the config.yml, please follow the steps below to encrypt the password and set the encrypted password and the key in the config.yml:
+1. Download the util jar to encrypt the password from [here](https://github.com/Appdynamics/maven-repo/raw/master/releases/com/appdynamics/appd-exts-commons/2.0.0/appd-exts-commons-2.0.0.jar).
+2. Encrypt password from the command line using the following command :
+   ```
+   java -cp "appd-exts-commons-2.0.0.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword
+   ```
+   where "myKey" is any random key,
+         "myPassword" is the actual password that needs to be encrypted
+3. Add the values for "encryptionKey", "encryptedPassword" in the config.yml. 
+   The value for "encryptionKey" is the value substituted for "myKey" in the above command.
+   The value for "encryptedPassword" is the result of the above command.  
 
-Always feel free to fork and contribute any changes directly here on GitHub.
+Please visit [this page](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) to get detailed instructions on password encryption.
 
-##Community
+## Extensions Workbench
+Workbench is an inbuilt feature provided with each extension in order to assist you to fine tune the extension setup before you actually deploy it on the controller. Please review the following document on [How to use the Extensions WorkBench](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-the-Extensions-WorkBench/ta-p/30130).
 
-Find out more in the [AppSphere](http://community.appdynamics.com/t5/eXchange-Community-AppDynamics/HA-Proxy-Monitoring-Extension/idi-p/6143) community.
-
-##Support
-
-For any questions or feature request, please contact [AppDynamics Support](mailto:help@appdynamics.com).
+## Troubleshooting
+Please follow the steps listed in this [troubleshooting-document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-troubleshoot-missing-custom-metrics-or-extensions-metrics/ta-p/28695) in order to troubleshoot your issue. These are a set of common issues that customers might have faced during the installation of the extension. If these don't solve your issue, please follow the last step on the [troubleshooting-document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-troubleshoot-missing-custom-metrics-or-extensions-metrics/ta-p/28695) to contact the support team.
 
 
+## Support Tickets
+If after going through the [Troubleshooting Document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-troubleshoot-missing-custom-metrics-or-extensions-metrics/ta-p/28695) you have not been able to get your extension working, please file a ticket and add the following information.
+
+Please provide the following in order for us to assist you better.
+
+    1. Stop the running machine agent.
+    2. Delete all existing logs under <MachineAgent>/logs.
+    3. Please enable debug logging by editing the file <MachineAgent>/conf/logging/log4j.xml. Change the level value of the following <logger> elements to debug.
+        <logger name="com.singularity">
+        <logger name="com.appdynamics">
+    4. Start the machine agent and please let it run for 10 mins. Then zip and upload all the logs in the directory <MachineAgent>/logs/*.
+    5. Attach the zipped <MachineAgent>/conf/* directory here.
+    6. Attach the zipped <MachineAgent>/monitors/ExtensionFolderYouAreHavingIssuesWith directory here.
+
+For any support related questions, you can also contact help@appdynamics.com.
+
+## Contributing
+Always feel free to fork and contribute any changes directly here on [GitHub](https://github.com/Appdynamics/haproxy-monitoring-extension).
+
+## Version
+|          Name            |  Version   |
+|--------------------------|------------|
+|Extension Version         |2.0.0       |
+|Controller Compatibility  |3.7 or Later|
+|Product Tested On         |1.7.5      |
+|Last Update               |03/07/2018  |

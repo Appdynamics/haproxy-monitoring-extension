@@ -12,6 +12,7 @@ servers:
     csvExportUri: ";csv"
     username: ""
     password: ""
+    encryptedPassword: ""
     useSsl: false
 
 connection:
