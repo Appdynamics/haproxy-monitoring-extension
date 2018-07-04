@@ -10,14 +10,14 @@ HAProxy is an open source, high performance TCP/HTTP Load Balancer commonly used
 
 HAProxy Monitoring Extension works with HAProxy v1.3 and above.
 
-In order to use this extension, you do need a [Standalone JAVA Machine Agent](https://docs.appdynamics.com/display/PRO44/Java+Agent) or [SIM Agent](https://docs.appdynamics.com/display/PRO44/Server+Visibility).  For more details on downloading these products, please  visit [here](https://download.appdynamics.com/).
+In order to use this extension, you do need a [Standalone JAVA Machine Agent](https://docs.appdynamics.com/display/PRO44/Standalone+Machine+Agents) or [SIM Agent](https://docs.appdynamics.com/display/PRO44/Server+Visibility).  For more details on downloading these products, please  visit [here](https://download.appdynamics.com/).
 The extension needs to be able to connect to the HAProxy in order to collect and send metrics. To do this, you will have to either establish a remote connection in between the extension and the product, or have an agent on the same machine running the product in order for the extension to collect and send the metrics.
   
 ## Installation
-1. Download and unzip the HAProxyMonitor-2.0.0.zip to the "<MachineAgent_Dir>/monitors" directory
+1. Download and unzip the HAProxyMonitor-2.0.0.zip to the "<MachineAgent_Dir>/monitors" directory.
 2. Edit the file config.yml as described below in Configuration Section, located in <MachineAgent_Dir>/monitors/HAProxyMonitor and update the server(s) details.
 3. All metrics to be reported are configured in metrics.xml. Users can remove entries from metrics.xml to stop the metric from reporting, or add new entries as well.
-4. Restart the Machine Agent
+4. Restart the Machine Agent.
 
 Please place the extension in the **"monitors"** directory of your **Machine Agent** installation directory. Do not place the extension in the **"extensions"** directory of your **Machine Agent** installation directory.
 In the AppDynamics Metric Browser, look for **Application Infrastructure Performance|\<Tier\>|Custom Metrics|HAProxy** and you should be able to see all the metrics.
@@ -58,7 +58,7 @@ Configure the extension by editing the config.yml file in `<MACHINE_AGENT_HOME>/
      ```
 
 
-#### Metrics.xml
+### Metrics.xml
 
 You can add/remove metrics of your choice by modifying the provided metrics.xml file. This file consists of all the metrics that will be monitored and sent to the controller. Please look how the metrics have been defined and follow the same convention, when adding new metrics. You do have the ability to chosoe your Rollup types as well as set an alias that you would like to be displayed on the metric browser.
 
@@ -79,15 +79,15 @@ You can add/remove metrics of your choice by modifying the provided metrics.xml 
  ```
 For configuring the metrics, the following properties can be used:
 
-     |     Property      |   Default value |         Possible values         |                                               Description                                                      |
-     | :---------------- | :-------------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------- |
-     | alias             | metric name     | Any string                      | The substitute name to be used in the metric browser instead of metric name.                                   |
-     | aggregationType   | "AVERAGE"       | "AVERAGE", "SUM", "OBSERVATION" | [Aggregation qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)    |
-     | timeRollUpType    | "AVERAGE"       | "AVERAGE", "SUM", "CURRENT"     | [Time roll-up qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)   |
-     | clusterRollUpType | "INDIVIDUAL"    | "INDIVIDUAL", "COLLECTIVE"      | [Cluster roll-up qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)|
-     | multiplier        | 1               | Any number                      | Value with which the metric needs to be multiplied.                                                            |
-     | convert           | null            | Any key value map               | Set of key value pairs that indicates the value to which the metrics need to be transformed. eg: UP:1, OPEN:1  |
-     | delta             | false           | true, false                     | If enabled, gives the delta values of metrics instead of actual values.                                        |
+ |     Property      |   Default value |         Possible values         |                                               Description                                                      |
+ | ----------------- | --------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+ | alias             | metric name     | Any string                      | The substitute name to be used in the metric browser instead of metric name.                                   |
+ | aggregationType   | "AVERAGE"       | "AVERAGE", "SUM", "OBSERVATION" | [Aggregation qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)    |
+ | timeRollUpType    | "AVERAGE"       | "AVERAGE", "SUM", "CURRENT"     | [Time roll-up qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)   |
+ | clusterRollUpType | "INDIVIDUAL"    | "INDIVIDUAL", "COLLECTIVE"      | [Cluster roll-up qualifier](https://docs.appdynamics.com/display/PRO44/Build+a+Monitoring+Extension+Using+Java)|
+ | multiplier        | 1               | Any number                      | Value with which the metric needs to be multiplied.                                                            |
+ | convert           | null            | Any key value map               | Set of key value pairs that indicates the value to which the metrics need to be transformed. eg: UP:1, OPEN:1  |
+ | delta             | false           | true, false                     | If enabled, gives the delta values of metrics instead of actual values.                                        |
 
 
  **All these metric properties are optional, and the default value shown in the table is applied to the metric (if a property has not been specified) by default.**
@@ -95,34 +95,12 @@ For configuring the metrics, the following properties can be used:
 
 
 ## Metrics
-Some of the HA-proxy metrics are shown here. For the complete list of metrics please visit [HAProxy Management Guide](https://www.haproxy.org/download/1.8/doc/management.txt).
+HA-proxy metrics and its description is shown [here](https://github.com/Appdynamics/haproxy-monitoring-extension/blob/master/Metrics-Details.md). For mored details, please visit [HAProxy Management Guide](https://www.haproxy.org/download/1.8/doc/management.txt).
 
-     pxname : proxy name
-     svname : service name (FRONTEND for frontend, BACKEND for backend, any name for server/listener)
-     qcur : current queued requests. For the backend this reports the number queued without a server assigned.
-     qmax : max value of qcur
-     scur : current sessions
-     smax : max sessions
-     slim : configured session limit
-     stot : cumulative number of sessions
-     bin : bytes in
-     bout: bytes out
 
 ## Credentials Encryption
 
-To avoid setting the clear text password in the config.yml, please follow the steps below to encrypt the password and set the encrypted password and the key in the config.yml:
-1. Download the util jar to encrypt the password from [here](https://github.com/Appdynamics/maven-repo/raw/master/releases/com/appdynamics/appd-exts-commons/2.0.0/appd-exts-commons-2.0.0.jar).
-2. Encrypt password from the command line using the following command :
-   ```
-   java -cp "appd-exts-commons-2.0.0.jar" com.appdynamics.extensions.crypto.Encryptor myKey myPassword
-   ```
-   where "myKey" is any random key,
-         "myPassword" is the actual password that needs to be encrypted
-3. Add the values for "encryptionKey", "encryptedPassword" in the config.yml. 
-   The value for "encryptionKey" is the value substituted for "myKey" in the above command.
-   The value for "encryptedPassword" is the result of the above command.  
-
-Please visit [this page](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) to get detailed instructions on password encryption.
+Please visit [this page](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) to get detailed instructions on password encryption. The steps in this document will guide you through the whole process.
 
 ## Extensions Workbench
 Workbench is an inbuilt feature provided with each extension in order to assist you to fine tune the extension setup before you actually deploy it on the controller. Please review the following document on [How to use the Extensions WorkBench](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-the-Extensions-WorkBench/ta-p/30130).
@@ -155,5 +133,6 @@ Always feel free to fork and contribute any changes directly here on [GitHub](ht
 |--------------------------|------------|
 |Extension Version         |2.0.0       |
 |Controller Compatibility  |3.7 or Later|
-|Product Tested On         |1.7.5      |
+|Product Tested On         |1.7.5       |
 |Last Update               |03/07/2018  |
+|Changes list              |[ChangeLog](https://github.com/Appdynamics/haproxy-monitoring-extension/blob/master/CHANGELOG.md)|
