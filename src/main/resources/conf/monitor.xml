@@ -19,22 +19,8 @@
         <type>java</type>
         <execution-timeout-in-secs>60</execution-timeout-in-secs>
         <task-arguments>
-            <argument name="host" is-required="true" default-value="demo.1wt.eu"/>
-            <argument name="port" is-required="true" default-value="80"/>
-
-            <!--URI of the haproxy CSV stats url. See the 'CSV Export' link on your haproxy stats page -->
-            <argument name="csv-export-uri" is-required="true" default-value=";csv"/>
-
-            <argument name="username" is-required="false" default-value=""/>
-            <argument name="password" is-required="false" default-value=""/>
-
-            <!--proxy names you wish to monitor as a comma separated values. If empty all the proxies are monitored -->
-            <argument name="proxynames" is-required="false" default-value=""/>
-            <!--HA Proxy stats as a comma separated values to be excluded from monitoring -->
-            <argument name="excludeStats" is-required="false" default-value="pid,iid,sid"/>
-            <argument name="metric-prefix" is-required="false" default-value="Custom Metrics|HAProxy|"/>
-
-
+            <argument name="config-file" is-required="true" default-value="monitors/HAProxyMonitor/config.yml" />
+            <argument name="metric-file" is-required="true" default-value="monitors/HAProxyMonitor/metrics.xml" />
         </task-arguments>
         <java-task>
             <classpath>haproxy-monitoring-extension.jar</classpath>
