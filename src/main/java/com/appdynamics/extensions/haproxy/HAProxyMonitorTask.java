@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -80,9 +81,8 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
             //reads the csv output and writes the response to a spreadsheet which is used to get the metrics
             List<List<String>> workbook = writeResponseToWorkbook(responseString);
-            ProxyStats proxyStats = (ProxyStats) configuration.getMetricsXml();
-            Map<String, List<String>> proxyServers = mapProxyServers(proxyStats);
-            collectAllMetrics(proxyServers, workbook);
+            Map<String, List<String>> proxyServersMap = mapProxyServers();
+            collectAllMetrics(proxyServersMap, workbook);
             logger.info("HAProxy Monitoring Task completed successfully for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed for : " + haServerArgs.get(Constant.DISPLAY_NAME), e);
@@ -138,13 +138,12 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     /**
      * Creates a Map of proxy vs List of servers from the response
      *
-     * @param proxyStats
      * @return
      */
-    Map<String, List<String>> mapProxyServers(ProxyStats proxyStats) {
+    Map<String, List<String>> mapProxyServers() {
         Map<String, List<String>> proxyServersMap = new HashMap<>();
-        ServerConfig[] serverConfigs = proxyStats.getProxyServerConfig().getServerConfigs();
-        for (ServerConfig serverConfig : serverConfigs) {
+        List<ServerConfig> serverConfigList = getMappedServerConfigs(haServerArgs);
+        for (ServerConfig serverConfig : serverConfigList) {
             if (proxyServersMap.get(serverConfig.getPxname()) == null) {
                 List<String> serverList = new LinkedList<>();
                 serverList.add(serverConfig.getSvname());
@@ -159,37 +158,20 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     /**
      * Collects all the metrics corresponding to the entries in the worksheet
      *
-     * @param proxyServers
+     * @param proxyServersMap
      */
-    private void collectAllMetrics(Map<String, List<String>> proxyServers, List<List<String>> workbook) {
+    private void collectAllMetrics(Map<String, List<String>> proxyServersMap, List<List<String>> workbook) {
         logger.debug("Starting the collect all metrics from the generated response");
         // Prints metrics to Controller Metric Browser
         MetricConfig[] metricConfigs = ((ProxyStats) configuration.getMetricsXml()).getStat().getMetricConfig();
-        ObjectMapper objectMapper = new ObjectMapper();
         List<Metric> metrics = new ArrayList<Metric>();
-
-        for (List<String> workbookRow : workbook) {
-            String commonMetricPath = metricPrefix + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_INDEX) + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_TYPE_INDEX) + Constant.METRIC_SEPARATOR;
-            List<String> serverList = proxyServers.get(workbookRow.get(Constant.PROXY_INDEX));
-
-            if (serverList != null && serverList.contains(workbookRow.get(Constant.PROXY_TYPE_INDEX))) {
-                for (MetricConfig config : metricConfigs) {
-                    Map<String, String> propertiesMap = objectMapper.convertValue(config, Map.class);
-                    //For any Non-Integer metric, it will be evaluated from the MetricConverter as defined in the metric.xml
-                    if (config.getMetricConverter() != null) {
-                        String convertedMetricValue = getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn()));
-                        if (!convertedMetricValue.equals("")) {
-                            Metric metric = new Metric(config.getAlias(), convertedMetricValue, commonMetricPath + config.getAlias(), propertiesMap);
-                            metrics.add(metric);
-                        }
-                    } else {
-                        Metric metric = collectMetric(config, workbookRow, commonMetricPath, propertiesMap);
-                        if (metric != null)
-                            metrics.add(metric);
-                    }
-                    logger.debug("Collected metrics for : " + commonMetricPath + config.getAlias());
-                }
-            }
+        //Ignoring the first row as it will have the headers from the CSV.
+        for (int rowNum = 1; rowNum < workbook.size(); rowNum++) {
+            List<String> workbookRow = workbook.get(rowNum);
+            String pxName = workbookRow.get(Constant.PROXY_INDEX);
+            List<String> serverList = getProxyServersList(proxyServersMap, pxName);
+            if (proxyServersMap.isEmpty() || (serverList != null && checkStringPatternMatch(serverList, workbookRow.get(Constant.PROXY_TYPE_INDEX))))
+                metrics.addAll(populateServerMetrics(metricConfigs, workbookRow));
         }
         if (metrics != null && metrics.size() > 0) {
             logger.debug("metrics collected and starting print metrics");
@@ -226,6 +208,108 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
                 return converter.getValue();
         }
         return "";
+    }
+
+    /**
+     *
+     * @param server
+     * @return
+     */
+    private List<ServerConfig> getMappedServerConfigs(Map<String, ?> server) {
+        System.out.println(server);
+        List<Map<String, ?>> proxyServers = (List<Map<String, ?>>) server.get("proxyServers");
+        List<ServerConfig> serverConfigList = new LinkedList<>();
+        if (proxyServers != null) {
+            for (Map<String, ?> proxyServer : proxyServers) {
+                String pxname = null;
+                for (Map.Entry<String, ?> entry : proxyServer.entrySet()) {
+                    if (entry.getKey().equals("pxname")) {
+                        pxname = (String) entry.getValue();
+                    }
+                    if (entry.getKey().equals("svname")) {
+                        List<String> svnames = (List<String>) entry.getValue();
+                        for (String svname : svnames) {
+                            ServerConfig serverConfig = new ServerConfig(pxname, svname);
+                            serverConfigList.add(serverConfig);
+                        }
+                    }
+                }
+            }
+        }
+        return serverConfigList;
+    }
+
+    /**
+     *
+     * @param proxyServers
+     * @param pxName
+     * @return
+     */
+    private List<String> getProxyServersList(Map<String, List<String>> proxyServers, String pxName) {
+        Set<String> configPatterns = proxyServers.keySet();
+        for (String configPxName : configPatterns) {
+            if (checkRegexMatch(pxName, configPxName))
+                return proxyServers.get(configPxName);
+        }
+        logger.debug("No match found for the proxy name : " + pxName);
+        return null;
+    }
+
+    /**
+     *
+     * @param configPatterns
+     * @param svName
+     * @return
+     */
+    private boolean checkStringPatternMatch(List<String> configPatterns, String svName) {
+        for (String configPxName : configPatterns) {
+            if (checkRegexMatch(svName, configPxName)) {
+                logger.debug("Match found for SvName :" + svName);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @param text
+     * @param pattern
+     * @return
+     */
+    private boolean checkRegexMatch(String text, String pattern) {
+        Pattern regexPattern = Pattern.compile(pattern);
+        Matcher regexMatcher = regexPattern.matcher(text);
+        return regexMatcher.matches();
+    }
+
+    /**
+     *
+     * @param metricConfigs
+     * @param workbookRow
+     * @return
+     */
+    private List<Metric> populateServerMetrics(MetricConfig[] metricConfigs, List<String> workbookRow) {
+        List<Metric> metrics = new LinkedList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (MetricConfig config : metricConfigs) {
+            Map<String, String> propertiesMap = objectMapper.convertValue(config, Map.class);
+            //For any Non-Integer metric, it will be evaluated from the MetricConverter as defined in the metric.xml
+            String commonMetricPath = metricPrefix + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_INDEX) + Constant.METRIC_SEPARATOR + workbookRow.get(Constant.PROXY_TYPE_INDEX) + Constant.METRIC_SEPARATOR;
+            if (config.getMetricConverter() != null) {
+                String convertedMetricValue = getConvertedStatus(config.getMetricConverter(), workbookRow.get(config.getColumn()));
+                if (!convertedMetricValue.equals("")) {
+                    Metric metric = new Metric(config.getAlias(), convertedMetricValue, commonMetricPath + config.getAlias(), propertiesMap);
+                    metrics.add(metric);
+                }
+            } else {
+                Metric metric = collectMetric(config, workbookRow, commonMetricPath, propertiesMap);
+                if (metric != null)
+                    metrics.add(metric);
+            }
+            logger.debug("Collected metrics for : " + commonMetricPath + config.getAlias());
+        }
+        return metrics;
     }
 
 }

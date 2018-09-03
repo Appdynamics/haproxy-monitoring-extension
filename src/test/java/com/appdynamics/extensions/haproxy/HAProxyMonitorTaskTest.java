@@ -110,15 +110,10 @@ public class HAProxyMonitorTaskTest {
 
         Mockito.when(contextConfiguration.getMetricsXml()).thenReturn(proxyStats);
 
-        Mockito.when(proxyStats.getProxyServerConfig()).thenReturn(proxyServerConfig);
-
         String[] pxName = {"http-in", "http-in", "http-in", "http-in", "http-in", "http-in", "www", "www", "www", "git", "git", "git", "demo"};
         String[] svName = {"FRONTEND", "IPv4-direct", "IPv4-cached", "IPv6-direct", "local", "local-https", "www", "bck", "BACKEND", "www", "bck", "BACKEND", "BACKEND"};
-        for (int i = 0; i < 13; i++) {
-            serverConfigs[i] = new ServerConfig();
-            serverConfigs[i].setPxname(pxName[i]);
-            serverConfigs[i].setSvname(svName[i]);
-        }
+        for (int i = 0; i < 13; i++)
+            serverConfigs[i] = new ServerConfig(pxName[i], svName[i]);
         Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
 
         String[] attr = {"qcur", "qmax", "scur", "smax", "slim", "stot", "bin", "bout", "dreq", "dresp", "ereq", "econ", "eresp", "wretr", "wredis", "status", "weight", "act", "bck", "chkfail", "chkdown", "lastchg", "downtime", "qlimit", "lbtot", "tracked", "type", "rate", "rate_lim", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "hanafail", "req_rate", "req_rate_max", "req_tot", "cli_abrt", "srv_abrt", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};

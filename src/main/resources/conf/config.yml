@@ -14,6 +14,13 @@ servers:
     password: ""
     encryptedPassword: ""
     useSsl: false
+    #regex supported or put ".*" to match everything
+    proxyServers:
+      - pxname: "http.*"
+        svname: ["FRONTEND", ".*-direct", "IPv4-.*"]
+      - pxname: "www"
+        svname: [".*"]
+
 
 connection:
   socketTimeout: 10000
