@@ -18,21 +18,6 @@ Set delta = true for metric to report per-min data
 Add "convert" for a metric if it has some non-numeric metric-value. Map the metric-value and it will be used while printmetric. e.g. <convert str="UP" value="1"/>
 -->
 <proxy-stats>
-    <proxy-servers name="proxy-servers" children="entries">
-        <servers pxname="http-in" svname="FRONTEND" />
-        <servers pxname="http-in" svname="IPv4-direct" />
-        <servers pxname="http-in" svname="IPv4-cached" />
-        <servers pxname="http-in" svname="IPv6-direct" />
-        <servers pxname="http-in" svname="local" />
-        <servers pxname="http-in" svname="local-https" />
-        <servers pxname="www" svname="www" />
-        <servers pxname="www" svname="bck" />
-        <servers pxname="www" svname="BACKEND" />
-        <servers pxname="git" svname="www" />
-        <servers pxname="git" svname="bck" />
-        <servers pxname="git" svname="BACKEND" />
-        <servers pxname="demo" svname="BACKEND" />
-    </proxy-servers>
     <stat name="metrics" children="entries">
         <metric attr="qcur" alias="queued_requests" column="2" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="qmax" alias="max_queued_requests" column="3" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" delta="true"/>

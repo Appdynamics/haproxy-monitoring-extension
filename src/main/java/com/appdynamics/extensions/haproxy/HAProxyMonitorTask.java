@@ -20,6 +20,7 @@ import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.util.AssertUtils;
+import com.appdynamics.extensions.util.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -71,19 +72,26 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     public void run() {
         logger.info("Starting the HAProxy Monitoring Task for : " + haServerArgs.get(Constant.DISPLAY_NAME));
         try {
-            Map<String, String> requestMap = buildRequestMap(haServerArgs);
-            String csvPath = (String) haServerArgs.get(Constant.CSV_EXPORT_URI);
-            CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
-            String url = UrlBuilder.builder(requestMap).path(csvPath).build();
-            String responseString = HttpClientUtils.getResponseAsStr(httpClient, url);
-            AssertUtils.assertNotNull(responseString, "response of the request is empty");
+
+            Map<String, List<String>> proxyServersMap = mapProxyServers();
             heartBeatValue = 1;
 
-            //reads the csv output and writes the response to a spreadsheet which is used to get the metrics
-            List<List<String>> workbook = writeResponseToWorkbook(responseString);
-            Map<String, List<String>> proxyServersMap = mapProxyServers();
-            collectAllMetrics(proxyServersMap, workbook);
-            logger.info("HAProxy Monitoring Task completed successfully for : " + haServerArgs.get(Constant.DISPLAY_NAME));
+            if (!proxyServersMap.isEmpty()) {
+                Map<String, String> requestMap = buildRequestMap(haServerArgs);
+                String csvPath = (String) haServerArgs.get(Constant.CSV_EXPORT_URI);
+                CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
+                String url = UrlBuilder.builder(requestMap).path(csvPath).build();
+                String responseString = HttpClientUtils.getResponseAsStr(httpClient, url);
+                AssertUtils.assertNotNull(responseString, "response of the request is empty");
+
+                //reads the csv output and writes the response to a spreadsheet which is used to get the metrics
+                List<List<String>> workbook = writeResponseToWorkbook(responseString);
+                collectAllMetrics(proxyServersMap, workbook);
+                logger.info("HAProxy Monitoring Task completed successfully for : " + haServerArgs.get(Constant.DISPLAY_NAME));
+            }
+            else{
+                logger.info("ProxyServers in the config.yml are not matched, Please provide proper details. ");
+            }
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed for : " + haServerArgs.get(Constant.DISPLAY_NAME), e);
         }
@@ -170,7 +178,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             List<String> workbookRow = workbook.get(rowNum);
             String pxName = workbookRow.get(Constant.PROXY_INDEX);
             List<String> serverList = getProxyServersList(proxyServersMap, pxName);
-            if (proxyServersMap.isEmpty() || (serverList != null && checkStringPatternMatch(serverList, workbookRow.get(Constant.PROXY_TYPE_INDEX))))
+            if ((serverList != null && checkStringPatternMatch(serverList, workbookRow.get(Constant.PROXY_TYPE_INDEX))))
                 metrics.addAll(populateServerMetrics(metricConfigs, workbookRow));
         }
         if (metrics != null && metrics.size() > 0) {
@@ -211,36 +219,30 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
-     *
      * @param server
      * @return
      */
     private List<ServerConfig> getMappedServerConfigs(Map<String, ?> server) {
-        System.out.println(server);
         List<Map<String, ?>> proxyServers = (List<Map<String, ?>>) server.get("proxyServers");
         List<ServerConfig> serverConfigList = new LinkedList<>();
         if (proxyServers != null) {
             for (Map<String, ?> proxyServer : proxyServers) {
-                String pxname = null;
-                for (Map.Entry<String, ?> entry : proxyServer.entrySet()) {
-                    if (entry.getKey().equals("pxname")) {
-                        pxname = (String) entry.getValue();
-                    }
-                    if (entry.getKey().equals("svname")) {
-                        List<String> svnames = (List<String>) entry.getValue();
-                        for (String svname : svnames) {
-                            ServerConfig serverConfig = new ServerConfig(pxname, svname);
-                            serverConfigList.add(serverConfig);
-                        }
+                String pxname = (String) proxyServer.get("pxname");
+                List<String> svnames = (List<String>) proxyServer.get("svname");
+                if (checkValidproxyServerEntry(pxname) && svnames.size() > 0 && checkValidproxyServerEntry(svnames.toArray(new String[svnames.size()]))) {
+                    for (String svname : svnames) {
+                        ServerConfig serverConfig = new ServerConfig(pxname, svname);
+                        serverConfigList.add(serverConfig);
                     }
                 }
+                else
+                    logger.info("Error in pxname-svname values and ignoring entry for pxname : " +  pxname );
             }
         }
         return serverConfigList;
     }
 
     /**
-     *
      * @param proxyServers
      * @param pxName
      * @return
@@ -256,7 +258,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
-     *
      * @param configPatterns
      * @param svName
      * @return
@@ -272,19 +273,17 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     }
 
     /**
-     *
      * @param text
      * @param pattern
      * @return
      */
     private boolean checkRegexMatch(String text, String pattern) {
-        Pattern regexPattern = Pattern.compile(pattern);
+        Pattern regexPattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
         Matcher regexMatcher = regexPattern.matcher(text);
         return regexMatcher.matches();
     }
 
     /**
-     *
      * @param metricConfigs
      * @param workbookRow
      * @return
@@ -312,4 +311,29 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         return metrics;
     }
 
+    /**
+     *
+     * @param values
+     * @return
+     */
+    private boolean checkValidproxyServerEntry(String... values) {
+        for (String value : values) {
+            value = StringUtils.stripQuote(value).trim();
+            if(!StringUtils.validateStrings(value) || value.equals(".*") || checkForDotStar(value))
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * It checks if the value consists of just the (.*) e.g .*.*.*.*.*.*
+     * If we have repeating .* as the input (some pxname or svname) then it should be ignored as we do not support (.*)
+     * and it prevents metric burst at controlled
+     * @param text
+     * @return
+     */
+    private boolean checkForDotStar(String text) {
+        text = text.replaceAll("[.*]", "");
+        return text.isEmpty();
+    }
 }

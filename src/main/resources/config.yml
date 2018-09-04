@@ -6,20 +6,24 @@ metricPrefix: Server|Component:<COMPONENT_ID>|Custom Metrics|HAProxy|
 
 servers:
   - displayName: "Local HAProxy"
-#    host: demo.1wt.eu
-    host: "demo.haproxy.org"
+    host: demo.1wt.eu
+#    host: "demo.haproxy.org"
     port: 80
     csvExportUri: ";csv"
     username: ""
     password: ""
     encryptedPassword: ""
     useSsl: false
-    #regex supported or put ".*" to match everything
+    #regex supported but do not put ".*" or blank
     proxyServers:
       - pxname: "http.*"
-        svname: ["FRONTEND", ".*-direct", "IPv4-.*"]
+        svname: ["FRONTEND", ".*-direct", "IPv4-.*", "local.*"]
       - pxname: "www"
-        svname: [".*"]
+        svname: ["b.*", "ww.*"]
+      - pxname: "git"
+        svname: ["b.*", "ww.*"]
+      - pxname: "demo"
+        svname: ["back.*"]
 
 
 connection:

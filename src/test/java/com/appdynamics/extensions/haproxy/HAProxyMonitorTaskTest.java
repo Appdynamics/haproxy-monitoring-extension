@@ -38,9 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -159,6 +157,31 @@ public class HAProxyMonitorTaskTest {
         server.put("host", "demo.haproxy.org");
         server.put("port", 80);
         server.put("csvExportUri", ";csv");
+        List<Map<String, ?>> proxyServers = new LinkedList<>();
+        Map<String, Object> map1 = new HashMap<>();
+        map1.put("pxname", "http.*");
+        String[] svname = {"FRONTEND", ".*-direct", "IPv4-.*", "local.*"};
+        map1.put("svname", Arrays.asList(svname));
+        proxyServers.add(map1);
+        Map<String, Object> map2 = new HashMap<>();
+        map2.put("pxname", "www");
+        String[] svname1 = {"b.*", "ww.*"};
+        map2.put("svname", Arrays.asList(svname1));
+        proxyServers.add(map2);
+
+        Map<String, Object> map3 = new HashMap<>();
+        map3.put("pxname", "demo");
+        String[] svname2 =  {"b.*", "ww.*"};
+        map3.put("svname", Arrays.asList(svname2));
+        proxyServers.add(map3);
+
+        Map<String, Object> map4 = new HashMap<>();
+        map4.put("pxname", "git");
+        String[] svname3 =  {"b.*", "ww.*"};
+        map4.put("svname", Arrays.asList(svname3));
+        proxyServers.add(map4);
+
+        server.put("proxyServers", proxyServers);
 
         haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), server));
 
