@@ -12,6 +12,7 @@ package com.appdynamics.extensions.haproxy;
 import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
+import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.haproxy.config.MetricConfig;
 import com.appdynamics.extensions.haproxy.config.MetricConverter;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
@@ -21,6 +22,8 @@ import com.appdynamics.extensions.http.UrlBuilder;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.util.AssertUtils;
 import com.appdynamics.extensions.util.StringUtils;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -139,8 +142,26 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         requestMap.put(Constant.PORT, String.valueOf(haServer.get(Constant.PORT)));
         requestMap.put(Constant.USE_SSL, String.valueOf(haServer.get(Constant.USE_SSL)));
         requestMap.put(Constant.USER_NAME, (String) haServer.get(Constant.USER_NAME));
-        requestMap.put(Constant.PASSWORD, (String) haServer.get(Constant.PASSWORD));
+        requestMap.put(Constant.PASSWORD, getPassword());
         return requestMap;
+    }
+
+    private String getPassword(){
+        String password = (String) haServerArgs.get("password");
+        String encryptedPassword = (String) haServerArgs.get("encryptedPassword");
+        Map<String, ?> configMap = configuration.getConfigYml();
+        String encryptionKey = configMap.get("encryptionKey").toString();
+        if(!Strings.isNullOrEmpty(password)){
+            return password;
+        }
+        if(!Strings.isNullOrEmpty(encryptedPassword) && !Strings.isNullOrEmpty(encryptionKey)){
+            Map<String,String> cryptoMap = Maps.newHashMap();
+            cryptoMap.put("password-encrypted", encryptedPassword);
+            cryptoMap.put("encryption-key", encryptionKey);
+            logger.debug("Decrypting the ecncrypted password........");
+            return CryptoUtil.getPassword(cryptoMap);
+        }
+        return "";
     }
 
     /**

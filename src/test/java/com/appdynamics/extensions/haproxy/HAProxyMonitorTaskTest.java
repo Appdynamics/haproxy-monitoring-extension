@@ -107,6 +107,9 @@ public class HAProxyMonitorTaskTest {
         Mockito.when(serviceProvider.getMetricWriteHelper()).thenReturn(metricWriter);
 
         Mockito.when(contextConfiguration.getMetricsXml()).thenReturn(proxyStats);
+        Map configYml = new HashMap<>();
+        configYml.put("encryptionKey", "");
+        Mockito.when(contextConfiguration.getConfigYml()).thenReturn(configYml);
 
         String[] pxName = {"http-in", "http-in", "http-in", "http-in", "http-in", "http-in", "www", "www", "www", "git", "git", "git", "demo"};
         String[] svName = {"FRONTEND", "IPv4-direct", "IPv4-cached", "IPv6-direct", "local", "local-https", "www", "bck", "BACKEND", "www", "bck", "BACKEND", "BACKEND"};

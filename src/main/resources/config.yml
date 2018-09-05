@@ -25,6 +25,8 @@ servers:
       - pxname: "demo"
         svname: ["back.*"]
 
+#Encryption key for Encrypted password.
+encryptionKey: ""
 
 connection:
   socketTimeout: 10000
