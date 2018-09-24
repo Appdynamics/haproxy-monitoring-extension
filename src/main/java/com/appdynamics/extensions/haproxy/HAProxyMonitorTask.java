@@ -32,8 +32,14 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.math.BigDecimal;
-import java.util.*;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +63,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     private String metricPrefix;
 
-    private int heartBeatValue = 0;
+    public static final String METRIC_SEPARATOR = "|";
 
     public HAProxyMonitorTask(MonitorContextConfiguration configuration, MetricWriteHelper metricWriteHelper, Map haServerArgs) {
         this.configuration = configuration;
@@ -68,8 +74,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
     @Override
     public void onTaskComplete() {
-        metricWriter.printMetric(metricPrefix + "|HeartBeat", BigDecimal.valueOf(heartBeatValue), "AVG.AVG.IND");
-        logger.info("Completed the HAProxy Monitoring Task");
+        logger.info("Completed the HAProxy Monitoring Task : " + haServerArgs.get("displayName"));
     }
 
     public void run() {
@@ -77,7 +82,6 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         try {
 
             Map<String, List<String>> proxyServersMap = mapProxyServers();
-            heartBeatValue = 1;
 
             if (!proxyServersMap.isEmpty()) {
                 Map<String, String> requestMap = buildRequestMap(haServerArgs);
@@ -97,6 +101,9 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             }
         } catch (Exception e) {
             logger.error("HAProxy Metrics collection failed for : " + haServerArgs.get(Constant.DISPLAY_NAME), e);
+            String prefix = configuration.getMetricPrefix() + METRIC_SEPARATOR + haServerArgs.get("displayName") + METRIC_SEPARATOR + "HeartBeat";
+            Metric heartBeat = new Metric("HeartBeat", String.valueOf(BigInteger.ZERO), prefix);
+            metricWriter.transformAndPrintMetrics(Arrays.asList(heartBeat));
         }
     }
 
@@ -115,7 +122,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             String line;
             while ((line = reader.readLine()) != null) {
                 Pattern p = Pattern.compile(",");
-                String[] currLine = p.split(line);
+                String[] currLine = p.split(line, -1);
                 List<String> row = new LinkedList<>();
                 for (String columnVal : currLine) {
                     row.add(columnVal);
@@ -156,8 +163,8 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
         }
         if(!Strings.isNullOrEmpty(encryptedPassword) && !Strings.isNullOrEmpty(encryptionKey)){
             Map<String,String> cryptoMap = Maps.newHashMap();
-            cryptoMap.put("password-encrypted", encryptedPassword);
-            cryptoMap.put("encryption-key", encryptionKey);
+            cryptoMap.put("encryptedPassword", encryptedPassword);
+            cryptoMap.put("encryptionKey", encryptionKey);
             logger.debug("Decrypting the ecncrypted password........");
             return CryptoUtil.getPassword(cryptoMap);
         }
@@ -202,6 +209,9 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             if ((serverList != null && checkStringPatternMatch(serverList, workbookRow.get(Constant.PROXY_TYPE_INDEX))))
                 metrics.addAll(populateServerMetrics(metricConfigs, workbookRow));
         }
+        String prefix = configuration.getMetricPrefix() + METRIC_SEPARATOR + haServerArgs.get("displayName") + METRIC_SEPARATOR + "HeartBeat";
+        Metric heartBeat = new Metric("HeartBeat", String.valueOf(BigInteger.ONE), prefix);
+        metrics.add(heartBeat);
         if (metrics != null && metrics.size() > 0) {
             logger.debug("metrics collected and starting print metrics");
             metricWriter.transformAndPrintMetrics(metrics);
@@ -217,6 +227,10 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
      * @param propertiesMap
      */
     private Metric collectMetric(MetricConfig config, List<String> workbookRow, String commonMetricPath, Map<String, String> propertiesMap) {
+        if(config.getColumn() >= workbookRow.size()) {
+            logger.debug("metric config column is greater than the response in the workbook");
+            return null;
+        }
         String cellContent = workbookRow.get(config.getColumn());
         if (!cellContent.equals(""))
             return new Metric(config.getAlias(), cellContent, commonMetricPath + config.getAlias(), propertiesMap);
