@@ -13,7 +13,12 @@ import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorContext;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.haproxy.config.*;
+import com.appdynamics.extensions.haproxy.config.MetricConfig;
+import com.appdynamics.extensions.haproxy.config.MetricConverter;
+import com.appdynamics.extensions.haproxy.config.ProxyServerConfig;
+import com.appdynamics.extensions.haproxy.config.ProxyStats;
+import com.appdynamics.extensions.haproxy.config.ServerConfig;
+import com.appdynamics.extensions.haproxy.config.Stat;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.metrics.Metric;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -26,8 +31,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.verify;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -37,12 +45,17 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.*;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -614,6 +627,7 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|lastsess", "0");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|rtime", "2");
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|demo|BACKEND|ttime", "0");
+        map.put("Custom Metrics|HAProxy|Local HA-Proxy|HeartBeat", "1");
         return map;
     }
 
