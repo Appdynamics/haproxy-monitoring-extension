@@ -1,26 +1,15 @@
 package com.appdynamics.extensions.haproxy.config;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ServerConfig {
-    @XmlAttribute
-    private String pxname;
-    @XmlAttribute
-    private String svname;
-
-    public void setPxname(String pxname) {
+    public ServerConfig(String pxname, String svname){
         this.pxname = pxname;
+        this.svname = svname;
     }
+    private String pxname;
+    private String svname;
 
     public String getPxname() {
         return pxname;
-    }
-
-    public void setSvname(String svname) {
-        this.svname = svname;
     }
 
     public String getSvname() {

@@ -54,11 +54,11 @@ public class HAProxyMonitor extends ABaseMonitor {
 
             List<Map<String, ?>> servers = (List<Map<String, ?>>) configYml.get("servers");
             if (servers.size() == 0) {
-                logger.debug("The server section in test-config.yml is not initialised");
+                logger.debug("The server section in config.yml is not initialised");
             }
 
             for (Map<String, ?> server : servers) {
-                AssertUtils.assertNotNull(server, "the server arguements are empty");
+                AssertUtils.assertNotNull(server, "the server arguments are empty");
                 HAProxyMonitorTask haProxyMonitorTask = new HAProxyMonitorTask(this.getContextConfiguration(), tasksExecutionServiceProvider.getMetricWriteHelper(), server);
                 AssertUtils.assertNotNull(server.get("displayName"), "The displayName can not be null");
                 tasksExecutionServiceProvider.submit((String) server.get("displayName"), haProxyMonitorTask);
@@ -86,7 +86,7 @@ public class HAProxyMonitor extends ABaseMonitor {
     @Override
     protected int getTaskCount() {
         List<Map<String, ?>> servers = (List<Map<String, ?>>) getContextConfiguration().getConfigYml().get("servers");
-        AssertUtils.assertNotNull(servers, "The 'servers' section in test-config.yml is not initialised");
+        AssertUtils.assertNotNull(servers, "The 'servers' section in config.yml is not initialised");
         return servers.size();
     }
 
@@ -102,8 +102,8 @@ public class HAProxyMonitor extends ABaseMonitor {
 //        HAProxyMonitor monitor = new HAProxyMonitor();
 //
 //        final Map<String, String> taskArgs = new HashMap<String, String>();
-//        taskArgs.put("config-file", "src/main/resources/conf/config.yml");
-//        taskArgs.put("metric-file", "src/main/resources/conf/metrics.xml");
+//        taskArgs.put("config-file", "src/main/resources/config.yml");
+//        taskArgs.put("metric-file", "src/main/resources/metrics.xml");
 //        monitor.execute(taskArgs, null);
 //    }
 }

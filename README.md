@@ -45,7 +45,13 @@ Configure the extension by editing the config.yml file in `<MACHINE_AGENT_HOME>/
           password: ""
           encryptedPassword: ""
           useSsl: false
-      connection: 
+          #proxyServers can be configured as a list of (pxname-svname) values and are regex supported but do not put ".*" or blank inputs
+          proxyServers:
+              - pxname: "http.*"      #Put the indivudual pxname. Array of pxname not supported
+                svname: ["FRONTEND", ".*-direct", "IPv4-.*"]
+              - pxname: "www"
+                svname: ["b.*"]
+      connection:
         connectTimeout: 10000
         socketTimeout: 10000
       ```
@@ -64,12 +70,12 @@ You can add/remove metrics of your choice by modifying the provided metrics.xml 
 
    1. Proxy Servers Configuration
     Add the `pxname` Proxy Name and `svname` Service Name as under the servers tag as shown below.
-``` 
+```
             <proxy-servers name="proxy-servers">
                     <servers pxname="http-in" svname="FRONTEND" />
             </proxy-servers>
  ```
- 
+
    2. Metric Stat Configuration
     Add the `metric` to be monitored under the metric tag as shown below.
 ```
@@ -131,8 +137,8 @@ Always feel free to fork and contribute any changes directly here on [GitHub](ht
 ## Version
 |          Name            |  Version   |
 |--------------------------|------------|
-|Extension Version         |2.0.0       |
+|Extension Version         |2.1.0       |
 |Controller Compatibility  |3.7 or Later|
 |Product Tested On         |1.7.5       |
-|Last Update               |03/07/2018  |
+|Last Update               |04/09/2018  |
 |Changes list              |[ChangeLog](https://github.com/Appdynamics/haproxy-monitoring-extension/blob/master/CHANGELOG.md)|

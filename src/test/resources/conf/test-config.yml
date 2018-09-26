@@ -13,7 +13,18 @@ servers:
     username: ""
     password: ""
     useSsl: false
+    proxyServers:
+      - pxname: "http.*"
+        svname: ["FRONTEND", ".*-direct", "IPv4-.*", "local.*"]
+      - pxname: "www"
+        svname: ["b.*", "ww.*"]
+      - pxname: "git"
+        svname: ["b.*", "ww.*"]
+      - pxname: "demo"
+        svname: ["back.*"]
 
+#Encryption key for Encrypted password.
+encryptionKey: ""
 
  # For each server you monitor, you will need a total of 1(by default) thread.
  # By default we want to support 5 servers, so it is 5 * 1 = 5 threads.
