@@ -1,4 +1,7 @@
 
+### 2.2 - May 05, 2020
+1. Updated to appd-exts-commons-2.2.3 SDK
+
 ### 2.1.0 - Sep 04, 2018
 1. Moved the proxy-server config to config.yml
 2. Added regex support for pxname-svname

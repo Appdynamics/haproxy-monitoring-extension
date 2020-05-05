@@ -10,8 +10,9 @@ package com.appdynamics.extensions.haproxy;
 import com.appdynamics.extensions.ABaseMonitor;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.util.AssertUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 public class HAProxyMonitor extends ABaseMonitor {
 
-    private static Logger logger = Logger.getLogger(HAProxyMonitor.class);
+    private static Logger logger = ExtensionsLoggerFactory.getLogger(HAProxyMonitor.class);
 
     @Override
     protected String getDefaultMetricPrefix() {
@@ -69,6 +70,13 @@ public class HAProxyMonitor extends ABaseMonitor {
 
     }
 
+    @Override
+    protected List<Map<String, ?>> getServers() {
+        List<Map<String, ?>> servers = (List<Map<String, ?>>) getContextConfiguration().getConfigYml().get("servers");
+        AssertUtils.assertNotNull(servers, "The 'servers' section in config.yml is not initialised");
+        return servers;
+    }
+
     /**
      * An Overridden method which gets called to set metrics-xml into the {@code MonitorContextConfiguration}
      *
@@ -80,15 +88,6 @@ public class HAProxyMonitor extends ABaseMonitor {
         this.getContextConfiguration().setMetricXml(args.get("metric-file"), ProxyStats.class);
     }
 
-    /**
-     * @return total tasks count
-     */
-    @Override
-    protected int getTaskCount() {
-        List<Map<String, ?>> servers = (List<Map<String, ?>>) getContextConfiguration().getConfigYml().get("servers");
-        AssertUtils.assertNotNull(servers, "The 'servers' section in config.yml is not initialised");
-        return servers.size();
-    }
 
 //    public static void main(String[] args) throws TaskExecutionException {
 //

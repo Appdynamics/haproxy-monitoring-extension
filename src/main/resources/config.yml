@@ -35,3 +35,22 @@ connection:
  # For each server you monitor, you will need a total of 1(by default) thread.
  # By default we want to support 5 servers, so it is 5 * 1 = 5 threads.
 numberOfThreads: 5
+
+# Default information needs to be updated
+controllerInfo:
+  controllerHost: "controller"
+  controllerPort: 8080
+  account: "customer1"
+  username: "user1"
+  password: "welcome"
+  encryptedPassword: ""
+  encryptionKey: ""
+  controllerSslEnabled: false
+  enableOrchestration: false
+  uniqueHostId: ""
+  accountAccessKey: ""
+  machinePath: ""
+  simEnabled: true
+  applicationName: ""
+  tierName: ""
+  nodeName: ""
