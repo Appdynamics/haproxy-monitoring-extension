@@ -137,8 +137,8 @@ Always feel free to fork and contribute any changes directly here on [GitHub](ht
 ## Version
 |          Name            |  Version   |
 |--------------------------|------------|
-|Extension Version         |2.1.0       |
-|Controller Compatibility  |3.7 or Later|
+|Extension Version         |2.2       |
+|Controller Compatibility  |4.5 or Later|
 |Product Tested On         |1.7.5       |
-|Last Update               |04/09/2018  |
+|Last Update               |05/05/2020  |
 |Changes list              |[ChangeLog](https://github.com/Appdynamics/haproxy-monitoring-extension/blob/master/CHANGELOG.md)|
