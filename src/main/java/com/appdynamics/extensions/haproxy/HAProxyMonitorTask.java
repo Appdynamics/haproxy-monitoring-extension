@@ -12,34 +12,29 @@ package com.appdynamics.extensions.haproxy;
 import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.crypto.CryptoUtil;
 import com.appdynamics.extensions.haproxy.config.MetricConfig;
 import com.appdynamics.extensions.haproxy.config.MetricConverter;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
 import com.appdynamics.extensions.haproxy.config.ServerConfig;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.util.AssertUtils;
+import com.appdynamics.extensions.util.CryptoUtils;
 import com.appdynamics.extensions.util.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,7 +48,7 @@ import java.util.regex.Pattern;
  */
 public class HAProxyMonitorTask implements AMonitorTaskRunnable {
 
-    private static final Logger logger = Logger.getLogger(HAProxyMonitorTask.class);
+    private static final Logger logger = ExtensionsLoggerFactory.getLogger(HAProxyMonitorTask.class);
 
     private MonitorContextConfiguration configuration;
 
@@ -166,7 +161,7 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
             cryptoMap.put("encryptedPassword", encryptedPassword);
             cryptoMap.put("encryptionKey", encryptionKey);
             logger.debug("Decrypting the ecncrypted password........");
-            return CryptoUtil.getPassword(cryptoMap);
+            return CryptoUtils.getPassword(cryptoMap);
         }
         return "";
     }
@@ -354,10 +349,28 @@ public class HAProxyMonitorTask implements AMonitorTaskRunnable {
     private boolean checkValidproxyServerEntry(String... values) {
         for (String value : values) {
             value = StringUtils.stripQuote(value).trim();
-            if(!StringUtils.validateStrings(value) || value.equals(".*") || checkForDotStar(value))
+            if(!validateStrings(value) || value.equals(".*") || checkForDotStar(value))
                 return false;
         }
         return true;
+    }
+
+    private static boolean validateStrings(String... args) {
+        if (args != null) {
+            String[] var1 = args;
+            int var2 = args.length;
+
+            for(int var3 = 0; var3 < var2; ++var3) {
+                String arg = var1[var3];
+                if (Strings.isNullOrEmpty(arg)) {
+                    return false;
+                }
+            }
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

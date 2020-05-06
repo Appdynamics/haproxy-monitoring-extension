@@ -93,7 +93,9 @@ Add "convert" for a metric if it has some non-numeric metric-value. Map the metr
         <metric attr="comp_byp" alias="comp_byp" column="53" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
         <metric attr="comp_rsp" alias="comp_rsp" column="54" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="lastsess" alias="lastsess" column="55" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
-        <metric attr="qtime" alias="qtime" column="56" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
+        <metric attr="qtime" alias="qtime" column="56" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" >
+            <convert str="OK" value="1"/>
+        </metric>/>
         <metric attr="ctime" alias="ctime" column="57" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
         <metric attr="rtime" alias="rtime" column="58" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE" />
         <metric attr="ttime" alias="ttime" column="59" aggregationType = "AVERAGE" timeRollUpType = "AVERAGE" clusterRollUpType = "COLLECTIVE"/>
