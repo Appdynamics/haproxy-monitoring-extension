@@ -9,3 +9,9 @@ build/
 bin/
 .DS_Store
 .idea
+.teamcity/*
+docker-compose.yml
+Dockerfile_MA
+Dockerfile_WorkBench
+Makefile
+src/integration-test/*
