@@ -37,6 +37,6 @@ public class Constant {
         PROXY_INDEX = 0;
         PROXY_TYPE_INDEX = 1;
         METRIC_PREFIX = "Custom Metrics|HAProxy";
-        USE_SSL = "useSsl";
+        USE_SSL = "useSSL";
     }
 }
