@@ -1,3 +1,5 @@
+### 2.2.1 - Sep 16, 2020
+1. Fixed issue for useSSL flag
 
 ### 2.2 - May 05, 2020
 1. Updated to appd-exts-commons-2.2.3 SDK
