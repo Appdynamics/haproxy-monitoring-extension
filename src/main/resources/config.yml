@@ -6,7 +6,7 @@ metricPrefix: Server|Component:<COMPONENT_ID>|Custom Metrics|HAProxy|
 
 servers:
   - displayName: "Local HAProxy"
-    host: demo.1wt.eu
+    host: "demo.1wt.eu"
 #    host: "demo.haproxy.org"
     port: 80
     csvExportUri: ";csv"
@@ -43,8 +43,7 @@ controllerInfo:
   account: "customer1"
   username: "user1"
   password: "welcome"
-  encryptedPassword: ""
-  encryptionKey: ""
+#  encryptedPassword: ""
   controllerSslEnabled: false
   enableOrchestration: false
   uniqueHostId: ""
@@ -54,5 +53,3 @@ controllerInfo:
   applicationName: ""
   tierName: ""
   nodeName: ""
-
-enableHealthChecks: false
