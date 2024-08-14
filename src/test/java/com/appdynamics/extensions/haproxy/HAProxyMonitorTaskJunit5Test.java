@@ -13,38 +13,35 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorContext;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.haproxy.config.MetricConfig;
 import com.appdynamics.extensions.haproxy.config.MetricConverter;
-import com.appdynamics.extensions.haproxy.config.ProxyServerConfig;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
-import com.appdynamics.extensions.haproxy.config.ServerConfig;
 import com.appdynamics.extensions.haproxy.config.Stat;
-import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
+import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.metrics.Metric;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -54,13 +51,8 @@ import java.util.Map;
 /**
  *
  */
-//@RunWith(PowerMockRunner.class)
-//@PrepareForTest({HttpClientUtils.class, CloseableHttpClient.class})
-//@PowerMockIgnore({"javax.net.ssl.*", "jdk.internal.reflect.*"})
-@Disabled("This test was written for JUnit 4, and it uses PowerMockito. It has been rewritten for JUnit 5.")
-public class HAProxyMonitorTaskTest {
-
-    public static final Logger logger = ExtensionsLoggerFactory.getLogger(HAProxyMonitorTaskTest.class);
+@ExtendWith(MockitoExtension.class)
+public class HAProxyMonitorTaskJunit5Test {
 
     @Mock
     private TasksExecutionServiceProvider serviceProvider;
@@ -72,9 +64,6 @@ public class HAProxyMonitorTaskTest {
     private MonitorContextConfiguration contextConfiguration;
 
     @Mock
-    private CloseableHttpResponse response;
-
-    @Mock
     private MonitorContext context;
 
     @Mock
@@ -84,46 +73,32 @@ public class HAProxyMonitorTaskTest {
     private CloseableHttpClient httpClient;
 
     @Mock
-    private ProxyServerConfig proxyServerConfig;
-
-    @Mock
     private Stat stat;
 
-    private ServerConfig[] serverConfigs = new ServerConfig[13];
-
-    private MetricConfig[] metricConfigs;
+    @Captor
+    private ArgumentCaptor<List<Metric>> pathCaptor;
 
     private HAProxyMonitorTask haProxyMonitorTask;
 
     private Map<String, String> expectedValueMap;
-
-    private ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
+    private AutoCloseable closeable;
 
     @BeforeEach
-    public void before() throws IOException {
+    @SuppressWarnings("unchecked")
+    public void before()  {
+        closeable = MockitoAnnotations.openMocks(this);
+        pathCaptor = ArgumentCaptor.forClass(List.class);
 
-        Mockito.when(contextConfiguration.getContext()).thenReturn(context);
+        when(contextConfiguration.getContext()).thenReturn(context);
 
-        Mockito.when(contextConfiguration.getMetricPrefix()).thenReturn("Custom Metrics|HAProxy");
+        when(contextConfiguration.getMetricPrefix()).thenReturn("Custom Metrics|HAProxy");
 
-        Mockito.when(context.getHttpClient()).thenReturn(httpClient);
+        when(context.getHttpClient()).thenReturn(httpClient);
 
-        Mockito.when(httpClient.execute(any(HttpGet.class))).thenReturn(response);
+        when(serviceProvider.getMetricWriteHelper()).thenReturn(metricWriter);
 
-        Mockito.when(response.getEntity()).thenReturn(new InputStreamEntity(new FileInputStream(new File("src/test/resources/demo.csv"))));
-
-        Mockito.when(serviceProvider.getMetricWriteHelper()).thenReturn(metricWriter);
-
-        Mockito.when(contextConfiguration.getMetricsXml()).thenReturn(proxyStats);
-        Map configYml = new HashMap<>();
-        configYml.put("encryptionKey", "");
-        Mockito.when(contextConfiguration.getConfigYml()).thenReturn(configYml);
-
-        String[] pxName = {"http-in", "http-in", "http-in", "http-in", "http-in", "http-in", "www", "www", "www", "git", "git", "git", "demo"};
-        String[] svName = {"FRONTEND", "IPv4-direct", "IPv4-cached", "IPv6-direct", "local", "local-https", "www", "bck", "BACKEND", "www", "bck", "BACKEND", "BACKEND"};
-        for (int i = 0; i < 13; i++)
-            serverConfigs[i] = new ServerConfig(pxName[i], svName[i]);
-        Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
+        when(contextConfiguration.getMetricsXml()).thenReturn(proxyStats);
+        Mockito.doReturn(Map.of("encryptionKey", "")).when(contextConfiguration).getConfigYml();
 
         String[] attr = {"qcur", "qmax", "scur", "smax", "slim", "stot", "bin", "bout", "dreq", "dresp", "ereq", "econ", "eresp", "wretr", "wredis", "status", "weight", "act", "bck", "chkfail", "chkdown", "lastchg", "downtime", "qlimit", "lbtot", "tracked", "type", "rate", "rate_lim", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "hanafail", "req_rate", "req_rate_max", "req_tot", "cli_abrt", "srv_abrt", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
         String[] alias = {"queued_requests", "max_queued_requests", "current sessions", "max sessions", "session limit", "total sessions", "bytes in", "bytes out", "denied requests", "denied responses", "error requests", "connection errors", "response errors", "connection retries", "request redispatches", "status", "server weight", "active servers", "backup servers", "checks failed", "number of transitions", "last transition", "total downtime", "maxqueue", "lbtot", "tracked", "type", "rate", "rate_limit", "rate_max", "check_status", "check_code", "check_duration", "hrsp_1xx", "hrsp_2xx", "hrsp_3xx", "hrsp_4xx", "hrsp_5xx", "hrsp_other", "failed health check", "req_rate", "req_rate_max", "req_tot", "client aborts", "server abortes", "comp_in", "comp_out", "comp_byp", "comp_rsp", "lastsess", "qtime", "ctime", "rtime", "ttime"};
@@ -131,7 +106,7 @@ public class HAProxyMonitorTaskTest {
         String[] status = {"UP", "OPEN"};
         String[] check_status = {"UNK", "INI", "SOCKERR", "L4OK", "L4TOUT", "L4CON", "L6OK", "L6TOUT", "L6RSP", "L7OK", "L7OKC", "L7TOUT", "L7RSP", "L7STS"};
         int numOfMetricConfigs = attr.length;
-        metricConfigs = new MetricConfig[numOfMetricConfigs];
+        MetricConfig[] metricConfigs = new MetricConfig[numOfMetricConfigs];
         for (int i = 0; i < numOfMetricConfigs; i++) {
             metricConfigs[i] = new MetricConfig();
             metricConfigs[i].setAttr(attr[i]);
@@ -157,11 +132,8 @@ public class HAProxyMonitorTaskTest {
             }
         }
 
-        Mockito.when(proxyServerConfig.getServerConfigs()).thenReturn(serverConfigs);
-
-        Mockito.when(proxyStats.getStat()).thenReturn(stat);
-
-        Mockito.when(stat.getMetricConfig()).thenReturn(metricConfigs);
+        when(proxyStats.getStat()).thenReturn(stat);
+        when(stat.getMetricConfig()).thenReturn(metricConfigs);
 
         Map<String, Object> server = new HashMap<>();
         server.put("displayName", "Local HA-Proxy");
@@ -194,55 +166,34 @@ public class HAProxyMonitorTaskTest {
 
         server.put("proxyServers", proxyServers);
 
-        haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), server));
+        haProxyMonitorTask = new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), server);
 
-//        PowerMockito.mockStatic(HttpClientUtils.class);
-//        PowerMockito.mockStatic(CloseableHttpClient.class);
-//
-//        PowerMockito.when(HttpClientUtils.getResponseAsStr(any(CloseableHttpClient.class), anyString())).thenAnswer(
-//                new Answer() {
-//                    public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-//                        return readFromCSV();
-//                    }
-//                });
+    }
+    @AfterEach
+    public void after() throws Exception {
+        closeable.close();
     }
 
     //read from the csv file which is the response of the httpClient
     private String readFromCSV() throws IOException {
-        String responseString = "";
-        File demoFile = new File("src/test/resources/demo.csv");
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(demoFile));
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                responseString += (line + '\n');
-
-            }
-        } catch (FileNotFoundException e) {
-            logger.error("the demo/data file is not present at the given path", e);
-        }
-        return responseString;
-    }
-
-    @BeforeEach
-    public void setUp() throws Exception {
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
+        return Files.readString(Paths.get("src/test/resources/demo.csv"));
     }
 
     @Test
     public void testHAProxyResponseRunTest() throws IOException {
         expectedValueMap = getExpectedResultMap();
-        haProxyMonitorTask.run();
+        try(MockedStatic<HttpClientUtils> hcu = Mockito.mockStatic(HttpClientUtils.class)){
+            hcu.when(() -> HttpClientUtils.getResponseAsStr(any(CloseableHttpClient.class), anyString())).thenReturn(readFromCSV());
+            haProxyMonitorTask.run();
+        }
         validateMetrics();
-        assertTrue(expectedValueMap.isEmpty(), "The expected values were not sent. The missing values are " + expectedValueMap);
+        assertTrue( expectedValueMap.isEmpty(), "The expected values were not sent. The missing values are " + expectedValueMap);
     }
 
+    @SuppressWarnings("unchecked")
     private void validateMetrics() {
         verify(metricWriter).transformAndPrintMetrics(pathCaptor.capture());
-        for (Metric metric : (List<Metric>) pathCaptor.getValue()) {
+        for (Metric metric : pathCaptor.getValue()) {
             String actualValue = metric.getMetricValue();
             String metricName = metric.getMetricPath();
             if (expectedValueMap.containsKey(metricName)) {
@@ -251,7 +202,7 @@ public class HAProxyMonitorTaskTest {
                 expectedValueMap.remove(metricName);
             } else {
                 System.out.println("\"" + metricName + "\",\"" + actualValue + "\"");
-                fail("Unknown Metric " + metricName);
+               fail("Unknown Metric " + metricName);
             }
         }
     }
@@ -625,5 +576,4 @@ public class HAProxyMonitorTaskTest {
         map.put("Custom Metrics|HAProxy|Local HA-Proxy|HeartBeat", "1");
         return map;
     }
-
 }
