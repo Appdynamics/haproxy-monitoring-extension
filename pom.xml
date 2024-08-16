@@ -24,85 +24,37 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.istack</groupId>
-        <artifactId>istack-commons-runtime</artifactId>
-        <version>3.0.8</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>1.17.1</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-        <version>1.2</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.xml.bind</groupId>
-        <artifactId>jaxb-api</artifactId>
-        <version>2.3.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>4.5.13</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-io</artifactId>
-        <version>9.4.55.v20240627</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-security</artifactId>
-        <version>12.0.12</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
-        <version>11.0.22</version>
-      </dependency>
-      <dependency>
-        <groupId>org.glassfish.jaxb</groupId>
-        <artifactId>txw2</artifactId>
-        <version>2.3.2</version>
+        <groupId>com.appdynamics</groupId>
+        <artifactId>machineagent-repackaged</artifactId>
+        <version>4.0.5.1</version>
       </dependency>
       <!-- Test dependencies -->
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.10.3</version>
         <type>pom</type>
-        <scope>import</scope>
+        <scope>test</scope>
+        <version>5.11.0</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
         <version>5.10.3</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
         <version>5.10.3</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-inline</artifactId>
         <version>5.2.0</version>
-        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>5.12.0</version>
       </dependency>
       <dependency>
         <groupId>org.objenesis</groupId>
@@ -241,42 +193,22 @@
     </dependency>
     <!-- Overriding dependencies -->
     <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>2.17.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.appdynamics</groupId>
       <artifactId>machineagent-repackaged</artifactId>
-      <version>4.0.5.1</version>
       <scope>provided</scope>
+    </dependency>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.junit</groupId>
+      <artifactId>junit-bom</artifactId>
+      <type>pom</type>
+      <scope>import</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--        &lt;!&ndash; Test dependencies &ndash;&gt;-->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
@@ -290,8 +222,11 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.12.0</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.objenesis</groupId>
+      <artifactId>objenesis</artifactId>
     </dependency>
   </dependencies>
   <repositories>
@@ -355,13 +290,26 @@
                 <exclude>META-INF/versions/*/com/fasterxml/jackson/core/io/doubleparser/*</exclude>
                 <exclude>META-INF/maven/org.eclipse.jetty/**</exclude>
                 <exclude>META-INF/maven/com.fasterxml.jackson*/**</exclude>
+                <exclude>META-INF/maven/com.sun.istack/**</exclude>
+                <exclude>META-INF/maven/jakarta.activation/jakarta.activation-api/**</exclude>
+                <exclude>META-INF/maven/javax.activation/javax.activation-api/**</exclude>
                 <exclude>META-INF/maven/javax.servlet/**</exclude>
+                <exclude>META-INF/maven/javax.xml.bind/jaxb-api/**</exclude>
                 <exclude>META-INF/maven/commons-codec/**</exclude>
+                <exclude>META-INF/maven/commons-logging/**</exclude>
+                <exclude>META-INF/maven/org.glassfish.jaxb/txw2/**</exclude>
+                <exclude>META-INF/maven/org.apache.httpcomponents/httpclient/**</exclude>
                 <exclude>META-INF/maven/org.slf4j/**</exclude>
                 <exclude>com/fasterxml/jackson/annotation/**</exclude>
                 <exclude>com/fasterxml/jackson/core/**</exclude>
                 <exclude>com/fasterxml/jackson/databind/**</exclude>
+                <exclude>com/sun/istack/**</exclude>
+                <exclude>com/sun/xml/txw2/**</exclude>
+                <exclude>javax/activation/**</exclude>
+                <exclude>javax/xml/bind/*</exclude>
                 <exclude>org/apache/commons/codec/**</exclude>
+                <exclude>org/apache/commons/logging/**</exclude>
+                <exclude>org/apache/http/**</exclude>
                 <exclude>org/eclipse/jetty/**</exclude>
                 <exclude>org/slf4j/**</exclude>
               </excludes>
