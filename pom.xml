@@ -9,7 +9,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.appdynamics.extensions</groupId>
   <artifactId>haproxy-monitoring-extension</artifactId>
-  <version>2.2.2</version>
+  <version>2.2.3</version>
   <packaging>jar</packaging>
   <name>haproxy-monitoring-extension</name>
   <url>http://maven.apache.org</url>
@@ -27,6 +27,36 @@
         <groupId>com.appdynamics</groupId>
         <artifactId>machineagent-repackaged</artifactId>
         <version>4.0.5.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-security</artifactId>
+        <version>12.0.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>12.0.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>11.0.22</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-io</artifactId>
+        <version>9.4.55.v20240627</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-util</artifactId>
+        <version>9.4.55.v20240627</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-util-ajax</artifactId>
+        <version>9.4.55.v20240627</version>
       </dependency>
       <!-- Test dependencies -->
       <dependency>
@@ -67,129 +97,7 @@
     <dependency>
       <groupId>com.appdynamics</groupId>
       <artifactId>appd-exts-commons</artifactId>
-      <version>2.2.13-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-databind</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.code.gson</groupId>
-          <artifactId>gson</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.j2objc</groupId>
-          <artifactId>j2objc-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.istack</groupId>
-          <artifactId>istack-commons-runtime</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-io</groupId>
-          <artifactId>commons-io</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-io</groupId>
-          <artifactId>commons-io</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.xml.bind</groupId>
-          <artifactId>jaxb-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.objecthunter</groupId>
-          <artifactId>exp4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-lang3</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpmime</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.checkerframework</groupId>
-          <artifactId>checker-qual</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-io</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-servlet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>jaxb-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>jaxb-runtime</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>txw2</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.nanohttpd</groupId>
-          <artifactId>nanohttpd</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.unix4j</groupId>
-          <artifactId>unix4j-base</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.unix4j</groupId>
-          <artifactId>unix4j-command</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.yaml</groupId>
-          <artifactId>snakeyaml</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>rg.glassfish.jaxb</groupId>
-          <artifactId>jaxb-core</artifactId>
-        </exclusion>
-      </exclusions>
+      <version>2.2.13</version>
     </dependency>
     <!-- Overriding dependencies -->
     <dependency>
@@ -202,7 +110,7 @@
       <groupId>org.junit</groupId>
       <artifactId>junit-bom</artifactId>
       <type>pom</type>
-      <scope>import</scope>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -235,7 +143,7 @@
         <enabled>true</enabled>
       </releases>
       <snapshots>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </snapshots>
       <id>github-maven-repo</id>
       <url>https://github.com/Appdynamics/maven-repo/raw/master/releases</url>
@@ -283,35 +191,74 @@
               <artifact>com.appdynamics:appd-exts-commons</artifact>
               <excludes>
                 <exclide>javax/servlet/**</exclide>
-                <exclude>jetty-dir.css</exclude>
-                <exclusion>META-INF/FastDoubleParser-LICENSE</exclusion>
-                <exclusion>META-INF/FastDoubleParser-NOTICE</exclusion>
-                <exclude>META-INF/versions/9/module-info*</exclude>
-                <exclude>META-INF/versions/*/com/fasterxml/jackson/core/io/doubleparser/*</exclude>
-                <exclude>META-INF/maven/org.eclipse.jetty/**</exclude>
+                <exclude>META-INF/FastDoubleParser-LICENSE</exclude>
+                <exclude>META-INF/FastDoubleParser-NOTICE</exclude>
+                <exclude>META-INF/mailcap.default</exclude>
                 <exclude>META-INF/maven/com.fasterxml.jackson*/**</exclude>
+                <exclude>META-INF/maven/com.google.code.gson/**</exclude>
+                <exclude>META-INF/maven/com.google.errorprone/**</exclude>
+                <exclude>META-INF/maven/com.google.gson/**</exclude>
+                <exclude>META-INF/maven/com.google.guava/**</exclude>
+                <exclude>META-INF/maven/com.google.j2objc/**</exclude>
                 <exclude>META-INF/maven/com.sun.istack/**</exclude>
+                <exclude>META-INF/maven/com.sun.xml.fastinfoset/FastInfoset/**</exclude>
+                <exclude>META-INF/maven/commons-codec/**</exclude>
+                <exclude>META-INF/maven/commons-io/commons-io/**</exclude>
+                <exclude>META-INF/maven/commons-logging/**</exclude>
                 <exclude>META-INF/maven/jakarta.activation/jakarta.activation-api/**</exclude>
+                <exclude>META-INF/maven/jakarta.xml.bind/jakarta.xml.bind-api/**</exclude>
                 <exclude>META-INF/maven/javax.activation/javax.activation-api/**</exclude>
                 <exclude>META-INF/maven/javax.servlet/**</exclude>
                 <exclude>META-INF/maven/javax.xml.bind/jaxb-api/**</exclude>
-                <exclude>META-INF/maven/commons-codec/**</exclude>
-                <exclude>META-INF/maven/commons-logging/**</exclude>
-                <exclude>META-INF/maven/org.glassfish.jaxb/txw2/**</exclude>
+                <exclude>META-INF/maven/net.objecthunter/exp4j/**</exclude>
+                <exclude>META-INF/maven/org.apache.commons/commons-lang3/**</exclude>
                 <exclude>META-INF/maven/org.apache.httpcomponents/httpclient/**</exclude>
+                <exclude>META-INF/maven/org.apache.httpcomponents/httpcore/**</exclude>
+                <exclude>META-INF/maven/org.apache.httpcomponents/httpmime/**</exclude>
+                <exclude>META-INF/maven/org.eclipse.jetty/**</exclude>
+                <exclude>META-INF/maven/org.eclipse.jetty/**</exclude>
+                <exclude>META-INF/maven/org.glassfish.jaxb/jaxb-core/**</exclude>
+                <exclude>META-INF/maven/org.glassfish.jaxb/jaxb-runtime/**</exclude>
+                <exclude>META-INF/maven/org.glassfish.jaxb/txw2/**</exclude>
+                <exclude>META-INF/maven/org.jvnet.staxex/stax-ex/**</exclude>
                 <exclude>META-INF/maven/org.slf4j/**</exclude>
+                <exclude>META-INF/maven/org.unix4j/**</exclude>
+                <exclude>META-INF/mimetypes.default</exclude>
+                <exclude>META-INF/proguard/**</exclude>
+                <exclude>META-INF/versions/*/com/fasterxml/jackson/core/io/doubleparser/*</exclude>
+                <exclude>META-INF/versions/9/module-info*</exclude>
+                <exclude>codegen/**</exclude>
                 <exclude>com/fasterxml/jackson/annotation/**</exclude>
                 <exclude>com/fasterxml/jackson/core/**</exclude>
                 <exclude>com/fasterxml/jackson/databind/**</exclude>
+                <exclude>com/google/thirdparty/publicsuffix/**</exclude>
+                <exclude>com/google/common/**</exclude>
+                <exclude>com/google/errorprone/**</exclude>
+                <exclude>com/google/gson/**</exclude>
+                <exclude>com/google/j2objc/**</exclude>
+                <exclude>com/sun/activation/registries/**</exclude>
+                <exclude>com/sun/activation/viewers/**</exclude>
                 <exclude>com/sun/istack/**</exclude>
+                <exclude>com/sun/xml/bind/**</exclude>
+                <exclude>com/sun/xml/fastinfoset/**</exclude>
                 <exclude>com/sun/xml/txw2/**</exclude>
+                <exclude>command-definition/**</exclude>
                 <exclude>javax/activation/**</exclude>
-                <exclude>javax/xml/bind/*</exclude>
+                <exclude>javax/xml/bind/**</exclude>
+                <exclude>jetty-dir.css</exclude>
+                <exclude>net/objecthunter/exp4j/**</exclude>
                 <exclude>org/apache/commons/codec/**</exclude>
+                <exclude>org/apache/commons/io/**</exclude>
+                <exclude>org/apache/commons/lang3/**</exclude>
                 <exclude>org/apache/commons/logging/**</exclude>
                 <exclude>org/apache/http/**</exclude>
+                <exclude>org/checkerframework/**</exclude>
                 <exclude>org/eclipse/jetty/**</exclude>
+                <exclude>org/jvnet/fastinfoset/**</exclude>
+                <exclude>org/jvnet/staxex/**</exclude>
                 <exclude>org/slf4j/**</exclude>
+                <exclude>org/unix4j/**</exclude>
+                <exclude>org/yaml/**</exclude>
               </excludes>
             </filter>
           </filters>
@@ -328,13 +275,17 @@
             </goals>
             <phase>package</phase>
             <configuration>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
               <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.PluginXmlResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Implementation-Title>HAProxy Monitor v${project.version} Build Date ${maven.build.timestamp}</Implementation-Title>
                     <Main-Class>com.appdynamics.extensions.workbench.WorkbenchServerLauncher</Main-Class>
-                    <Multi-Release>true</Multi-Release>
+                    <Multi-Release>false</Multi-Release>
                   </manifestEntries>
                 </transformer>
               </transformers>
