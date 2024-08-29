@@ -9,10 +9,8 @@
 
 package com.appdynamics.extensions.haproxy;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
@@ -24,19 +22,27 @@ import com.appdynamics.extensions.haproxy.config.ProxyServerConfig;
 import com.appdynamics.extensions.haproxy.config.ProxyStats;
 import com.appdynamics.extensions.haproxy.config.ServerConfig;
 import com.appdynamics.extensions.haproxy.config.Stat;
+import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.metrics.Metric;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -54,10 +60,9 @@ import java.util.Map;
 /**
  *
  */
-//@RunWith(PowerMockRunner.class)
-//@PrepareForTest({HttpClientUtils.class, CloseableHttpClient.class})
-//@PowerMockIgnore({"javax.net.ssl.*", "jdk.internal.reflect.*"})
-@Disabled("This test was written for JUnit 4, and it uses PowerMockito. It has been rewritten for JUnit 5.")
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(HttpClientUtils.class)
+@PowerMockIgnore("javax.net.ssl.*")
 public class HAProxyMonitorTaskTest {
 
     public static final Logger logger = ExtensionsLoggerFactory.getLogger(HAProxyMonitorTaskTest.class);
@@ -99,7 +104,7 @@ public class HAProxyMonitorTaskTest {
 
     private ArgumentCaptor<List> pathCaptor = ArgumentCaptor.forClass(List.class);
 
-    @BeforeEach
+    @Before
     public void before() throws IOException {
 
         Mockito.when(contextConfiguration.getContext()).thenReturn(context);
@@ -196,15 +201,15 @@ public class HAProxyMonitorTaskTest {
 
         haProxyMonitorTask = Mockito.spy(new HAProxyMonitorTask(contextConfiguration, serviceProvider.getMetricWriteHelper(), server));
 
-//        PowerMockito.mockStatic(HttpClientUtils.class);
-//        PowerMockito.mockStatic(CloseableHttpClient.class);
-//
-//        PowerMockito.when(HttpClientUtils.getResponseAsStr(any(CloseableHttpClient.class), anyString())).thenAnswer(
-//                new Answer() {
-//                    public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-//                        return readFromCSV();
-//                    }
-//                });
+        PowerMockito.mockStatic(HttpClientUtils.class);
+        PowerMockito.mockStatic(CloseableHttpClient.class);
+
+        PowerMockito.when(HttpClientUtils.getResponseAsStr(any(CloseableHttpClient.class), anyString())).thenAnswer(
+                new Answer() {
+                    public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                        return readFromCSV();
+                    }
+                });
     }
 
     //read from the csv file which is the response of the httpClient
@@ -224,11 +229,11 @@ public class HAProxyMonitorTaskTest {
         return responseString;
     }
 
-    @BeforeEach
+    @Before
     public void setUp() throws Exception {
     }
 
-    @AfterEach
+    @After
     public void tearDown() throws Exception {
     }
 
@@ -237,7 +242,7 @@ public class HAProxyMonitorTaskTest {
         expectedValueMap = getExpectedResultMap();
         haProxyMonitorTask.run();
         validateMetrics();
-        assertTrue(expectedValueMap.isEmpty(), "The expected values were not sent. The missing values are " + expectedValueMap);
+        Assert.assertTrue("The expected values were not sent. The missing values are " + expectedValueMap, expectedValueMap.isEmpty());
     }
 
     private void validateMetrics() {
@@ -247,11 +252,11 @@ public class HAProxyMonitorTaskTest {
             String metricName = metric.getMetricPath();
             if (expectedValueMap.containsKey(metricName)) {
                 String expectedValue = expectedValueMap.get(metricName);
-                assertEquals(expectedValue, actualValue, "The value of the metric " + metricName + " failed");
+                Assert.assertEquals("The value of the metric " + metricName + " failed", expectedValue, actualValue);
                 expectedValueMap.remove(metricName);
             } else {
                 System.out.println("\"" + metricName + "\",\"" + actualValue + "\"");
-                fail("Unknown Metric " + metricName);
+                Assert.fail("Unknown Metric " + metricName);
             }
         }
     }
