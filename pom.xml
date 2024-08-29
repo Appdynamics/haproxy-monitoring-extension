@@ -5,394 +5,196 @@
   ~  * This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
   ~  * The copyright notice above does not evidence any actual or intended publication of such source code.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.appdynamics.extensions</groupId>
-  <artifactId>haproxy-monitoring-extension</artifactId>
-  <version>2.2.3</version>
-  <packaging>jar</packaging>
-  <name>haproxy-monitoring-extension</name>
-  <url>http://maven.apache.org</url>
-  <scm>
-    <connection>scm:git:https://github.com/Appdynamics/haproxy-monitoring-extension.git</connection>
-  </scm>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-    <target.dir>${project.build.directory}/HAProxyMonitor</target.dir>
-  </properties>
-  <dependencyManagement>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.appdynamics.extensions</groupId>
+    <artifactId>haproxy-monitoring-extension</artifactId>
+    <version>2.2.2</version>
+    <packaging>jar</packaging>
+
+    <name>haproxy-monitoring-extension</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+        <target.dir>${project.build.directory}/HAProxyMonitor</target.dir>
+    </properties>
+
     <dependencies>
-      <dependency>
-        <groupId>com.appdynamics</groupId>
-        <artifactId>machineagent-repackaged</artifactId>
-        <version>4.0.5.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-security</artifactId>
-        <version>12.0.12</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-server</artifactId>
-        <version>12.0.12</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
-        <version>11.0.22</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-io</artifactId>
-        <version>9.4.55.v20240627</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-util</artifactId>
-        <version>9.4.55.v20240627</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-util-ajax</artifactId>
-        <version>9.4.55.v20240627</version>
-      </dependency>
-      <!-- Test dependencies -->
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <type>pom</type>
-        <scope>test</scope>
-        <version>5.11.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
-        <version>5.10.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
-        <version>5.10.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-inline</artifactId>
-        <version>5.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-junit-jupiter</artifactId>
-        <version>5.12.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.objenesis</groupId>
-        <artifactId>objenesis</artifactId>
-        <version>3.4</version>
-      </dependency>
+        <dependency>
+            <groupId>com.appdynamics</groupId>
+            <artifactId>machineagent-repackaged</artifactId>
+            <version>4.0.5.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.appdynamics</groupId>
+            <artifactId>appd-exts-commons</artifactId>
+            <version>2.2.13</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>1.5.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>1.5.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-  </dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>com.appdynamics</groupId>
-      <artifactId>appd-exts-commons</artifactId>
-      <version>2.2.13</version>
-    </dependency>
-    <!-- Overriding dependencies -->
-    <dependency>
-      <groupId>com.appdynamics</groupId>
-      <artifactId>machineagent-repackaged</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>org.junit</groupId>
-      <artifactId>junit-bom</artifactId>
-      <type>pom</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.objenesis</groupId>
-      <artifactId>objenesis</artifactId>
-    </dependency>
-  </dependencies>
-  <repositories>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>github-maven-repo</id>
-      <url>https://github.com/Appdynamics/maven-repo/raw/master/releases</url>
-    </repository>
-  </repositories>
-  <build>
-    <finalName>${project.artifactId}</finalName>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-      </testResource>
-    </testResources>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
-        <configuration>
-          <source>11</source>
-          <target>11</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.0</version>
-        <configuration>
-          <createDependencyReducedPom>false</createDependencyReducedPom>
-          <filters>
-            <filter>
-              <artifact>*:*</artifact>
-              <excludes>
-                <exclude>META-INF/*.SF</exclude>
-                <exclude>META-INF/*.DSA</exclude>
-                <exclude>META-INF/*.RSA</exclude>
-              </excludes>
-            </filter>
-            <!-- Several shaded dependencies from the appd-exts-commons are excluded/replaced because they have since been patched for security reasons -->
-            <filter>
-              <artifact>com.appdynamics:appd-exts-commons</artifact>
-              <excludes>
-                <exclide>javax/servlet/**</exclide>
-                <exclude>META-INF/FastDoubleParser-LICENSE</exclude>
-                <exclude>META-INF/FastDoubleParser-NOTICE</exclude>
-                <exclude>META-INF/mailcap.default</exclude>
-                <exclude>META-INF/maven/com.fasterxml.jackson*/**</exclude>
-                <exclude>META-INF/maven/com.google.code.gson/**</exclude>
-                <exclude>META-INF/maven/com.google.errorprone/**</exclude>
-                <exclude>META-INF/maven/com.google.gson/**</exclude>
-                <exclude>META-INF/maven/com.google.guava/**</exclude>
-                <exclude>META-INF/maven/com.google.j2objc/**</exclude>
-                <exclude>META-INF/maven/com.sun.istack/**</exclude>
-                <exclude>META-INF/maven/com.sun.xml.fastinfoset/FastInfoset/**</exclude>
-                <exclude>META-INF/maven/commons-codec/**</exclude>
-                <exclude>META-INF/maven/commons-io/commons-io/**</exclude>
-                <exclude>META-INF/maven/commons-logging/**</exclude>
-                <exclude>META-INF/maven/jakarta.activation/jakarta.activation-api/**</exclude>
-                <exclude>META-INF/maven/jakarta.xml.bind/jakarta.xml.bind-api/**</exclude>
-                <exclude>META-INF/maven/javax.activation/javax.activation-api/**</exclude>
-                <exclude>META-INF/maven/javax.servlet/**</exclude>
-                <exclude>META-INF/maven/javax.xml.bind/jaxb-api/**</exclude>
-                <exclude>META-INF/maven/net.objecthunter/exp4j/**</exclude>
-                <exclude>META-INF/maven/org.apache.commons/commons-lang3/**</exclude>
-                <exclude>META-INF/maven/org.apache.httpcomponents/httpclient/**</exclude>
-                <exclude>META-INF/maven/org.apache.httpcomponents/httpcore/**</exclude>
-                <exclude>META-INF/maven/org.apache.httpcomponents/httpmime/**</exclude>
-                <exclude>META-INF/maven/org.eclipse.jetty/**</exclude>
-                <exclude>META-INF/maven/org.eclipse.jetty/**</exclude>
-                <exclude>META-INF/maven/org.glassfish.jaxb/jaxb-core/**</exclude>
-                <exclude>META-INF/maven/org.glassfish.jaxb/jaxb-runtime/**</exclude>
-                <exclude>META-INF/maven/org.glassfish.jaxb/txw2/**</exclude>
-                <exclude>META-INF/maven/org.jvnet.staxex/stax-ex/**</exclude>
-                <exclude>META-INF/maven/org.slf4j/**</exclude>
-                <exclude>META-INF/maven/org.unix4j/**</exclude>
-                <exclude>META-INF/mimetypes.default</exclude>
-                <exclude>META-INF/proguard/**</exclude>
-                <exclude>META-INF/versions/*/com/fasterxml/jackson/core/io/doubleparser/*</exclude>
-                <exclude>META-INF/versions/9/module-info*</exclude>
-                <exclude>codegen/**</exclude>
-                <exclude>com/fasterxml/jackson/annotation/**</exclude>
-                <exclude>com/fasterxml/jackson/core/**</exclude>
-                <exclude>com/fasterxml/jackson/databind/**</exclude>
-                <exclude>com/google/thirdparty/publicsuffix/**</exclude>
-                <exclude>com/google/common/**</exclude>
-                <exclude>com/google/errorprone/**</exclude>
-                <exclude>com/google/gson/**</exclude>
-                <exclude>com/google/j2objc/**</exclude>
-                <exclude>com/sun/activation/registries/**</exclude>
-                <exclude>com/sun/activation/viewers/**</exclude>
-                <exclude>com/sun/istack/**</exclude>
-                <exclude>com/sun/xml/bind/**</exclude>
-                <exclude>com/sun/xml/fastinfoset/**</exclude>
-                <exclude>com/sun/xml/txw2/**</exclude>
-                <exclude>command-definition/**</exclude>
-                <exclude>javax/activation/**</exclude>
-                <exclude>javax/xml/bind/**</exclude>
-                <exclude>jetty-dir.css</exclude>
-                <exclude>net/objecthunter/exp4j/**</exclude>
-                <exclude>org/apache/commons/codec/**</exclude>
-                <exclude>org/apache/commons/io/**</exclude>
-                <exclude>org/apache/commons/lang3/**</exclude>
-                <exclude>org/apache/commons/logging/**</exclude>
-                <exclude>org/apache/http/**</exclude>
-                <exclude>org/checkerframework/**</exclude>
-                <exclude>org/eclipse/jetty/**</exclude>
-                <exclude>org/jvnet/fastinfoset/**</exclude>
-                <exclude>org/jvnet/staxex/**</exclude>
-                <exclude>org/slf4j/**</exclude>
-                <exclude>org/unix4j/**</exclude>
-                <exclude>org/yaml/**</exclude>
-              </excludes>
-            </filter>
-          </filters>
-          <artifactSet>
-            <excludes>
-              <exclude>com.fasterxml.jackson.core:jackson-databind:2.14.1.redhat-00001</exclude>
-            </excludes>
-          </artifactSet>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <createDependencyReducedPom>true</createDependencyReducedPom>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.PluginXmlResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <manifestEntries>
-                    <Implementation-Title>HAProxy Monitor v${project.version} Build Date ${maven.build.timestamp}</Implementation-Title>
-                    <Main-Class>com.appdynamics.extensions.workbench.WorkbenchServerLauncher</Main-Class>
-                    <Multi-Release>false</Multi-Release>
-                  </manifestEntries>
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>install</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <phase>install</phase>
-            <configuration>
-              <target>
-                <mkdir dir="${target.dir}"/>
-                <copy todir="${target.dir}">
-                  <fileset dir="src/main/resources" includes="monitor.xml"/>
-                </copy>
-                <copy todir="${target.dir}">
-                  <fileset dir="${project.build.directory}" includes="${project.artifactId}.${project.packaging}"/>
-                </copy>
-                <copy todir="${target.dir}">
-                  <fileset dir="src/main/resources" includes="config.yml"/>
-                </copy>
-                <copy todir="${target.dir}">
-                  <fileset dir="src/main/resources" includes="metrics.xml"/>
-                </copy>
-                <copy todir="${target.dir}">
-                  <fileset dir="${project.basedir}" includes="LICENSE"/>
-                </copy>
-                <copy todir="${target.dir}">
-                  <fileset dir="${project.basedir}" includes="NOTICE.txt"/>
-                </copy>
-                <zip destfile="${target.dir}-${project.version}.zip">
-                  <zipfileset dir="${target.dir}" filemode="755" prefix="HAProxyMonitor/"/>
-                </zip>
-                <delete dir="${target.dir}"/>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <version>2.17.1</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-scm-plugin</artifactId>
-        <version>2.1.0</version>
-        <configuration>
-          <tag>${project.artifactId}-${project.version}</tag>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>report</id>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <phase>prepare-package</phase>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.3.1</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.10.3</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-    </plugins>
-  </build>
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <!-- select non-aggregate reports -->
-              <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-    </plugins>
-  </reporting>
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Implementation-Title>
+                                            HAProxy Monitor v${project.version} Build Date ${maven.build.timestamp}
+                                        </Implementation-Title>
+                                        <Main-Class>
+                                            com.appdynamics.extensions.workbench.WorkbenchServerLauncher
+                                        </Main-Class>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>install</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${target.dir}"/>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="src/main/resources" includes="monitor.xml"/>
+                                </copy>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="${project.build.directory}"
+                                             includes="${project.artifactId}.${project.packaging}"/>
+                                </copy>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="src/main/resources" includes="config.yml"/>
+                                </copy>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="src/main/resources" includes="metrics.xml"/>
+                                </copy>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="${project.basedir}" includes="LICENSE"/>
+                                </copy>
+                                <copy todir="${target.dir}">
+                                    <fileset dir="${project.basedir}" includes="NOTICE.txt"/>
+                                </copy>
+                                <zip destfile="${target.dir}-${project.version}.zip">
+                                    <zipfileset dir="${target.dir}" filemode="755" prefix="HAProxyMonitor/"/>
+                                </zip>
+                                <delete dir="${target.dir}"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-scm-plugin</artifactId>
+                <version>1.8.1</version>
+                <configuration>
+                    <tag>${project.artifactId}-${project.version}</tag>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <repositories>
+        <repository>
+            <id>github-maven-repo</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>https://github.com/Appdynamics/maven-repo/raw/master/releases</url>
+        </repository>
+    </repositories>
+    <scm>
+        <connection>scm:git:https://github.com/Appdynamics/haproxy-monitoring-extension.git</connection>
+    </scm>
 </project>
