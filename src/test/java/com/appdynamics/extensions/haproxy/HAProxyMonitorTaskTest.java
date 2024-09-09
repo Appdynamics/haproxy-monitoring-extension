@@ -9,11 +9,19 @@
 
 package com.appdynamics.extensions.haproxy;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.TasksExecutionServiceProvider;
 import com.appdynamics.extensions.conf.MonitorContext;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.haproxy.config.*;
+import com.appdynamics.extensions.haproxy.config.MetricConfig;
+import com.appdynamics.extensions.haproxy.config.MetricConverter;
+import com.appdynamics.extensions.haproxy.config.ProxyServerConfig;
+import com.appdynamics.extensions.haproxy.config.ProxyStats;
+import com.appdynamics.extensions.haproxy.config.ServerConfig;
+import com.appdynamics.extensions.haproxy.config.Stat;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
 import com.appdynamics.extensions.metrics.Metric;
@@ -37,12 +45,17 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 
-import java.io.*;
-import java.util.*;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.verify;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
